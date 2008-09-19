@@ -1,6 +1,7 @@
 #include <substrate.h>
 
 #import <CoreGraphics/CGGeometry.h>
+
 #import <Foundation/NSArray.h>
 #import <Foundation/NSDictionary.h>
 #import <Foundation/NSString.h>
@@ -12,26 +13,27 @@
 #import <SpringBoard/SBIconList.h>
 #import <SpringBoard/SBIconModel.h>
 
+#import <UIKit/UIView-Animation.h>
+
 @protocol PageCutsController
 - (id) pc_init;
 - (void) pc_dealloc;
+- (void) pc_unscatter:(BOOL)unscatter startTime:(double)startTime;
 - (void) pc_clickedIcon:(SBIcon *)icon;
 - (void) pc_updateCurrentIconListIndexUpdatingPageIndicator:(BOOL)update;
-- (void) pc_unscatter:(BOOL)unscatter startTime:(double)startTime;
 @end
 
 @protocol PageCutsIcon
 - (id) pc_displayName;
 @end
 
-@protocol PageCutsList
-- (id) pc_resetWithDictionaryRepresentation:(id)rep;
-@end
-
 #define MAX_DOCK_ICONS 5
 #define MAX_PAGES 9
 #define NAME_PREFIX "Folder_"
+#define PAGECUT_PREFIX "com.pagecuts"
 
+
+static SBIconModel *iconModel = nil;
 
 static NSString *pageNames[MAX_PAGES] = {nil};
 static NSArray *offscreenDockIcons = nil;
@@ -41,12 +43,12 @@ static id $SBIconController$init(SBIconController<PageCutsController> *self, SEL
     self = [self pc_init];
     if (self) {
         Class $SBIconModel(objc_getClass("SBIconModel"));
-        SBIconModel *iconModel = [$SBIconModel sharedInstance];
+        iconModel = [$SBIconModel sharedInstance];
 
         // Load and cache page names
         for (int i = 0; i < MAX_PAGES; i++) {
             SBIcon *icon = [iconModel iconForDisplayIdentifier:
-                [NSString stringWithFormat:@"com.pagecuts.%d", i]];
+                [NSString stringWithFormat:@PAGECUT_PREFIX".%d", i]];
             if (icon) {
                 NSString *name = [icon displayName];
                 if ([name hasPrefix:@NAME_PREFIX])
@@ -65,10 +67,13 @@ static id $SBIconController$init(SBIconController<PageCutsController> *self, SEL
             // NOTE: empty slots are represented by NSNumber 0
             if ([iconInfo isKindOfClass:[NSDictionary class]]) {
                 NSString *identifier = [iconInfo objectForKey:@"displayIdentifier"];
-                SBIcon *icon = [iconModel iconForDisplayIdentifier:identifier];
-                [iconArray addObject:icon];
+                [iconArray addObject:[iconModel iconForDisplayIdentifier:identifier]];
             }
         }
+        if ([iconArray count] == 0)
+            // Toggled dock must always contain the page-0 icon for toggling
+            [iconArray addObject:[iconModel iconForDisplayIdentifier:@PAGECUT_PREFIX".0"]];
+
         offscreenDockIcons = iconArray;
     }
     return self;
@@ -80,11 +85,33 @@ static void $SBIconController$dealloc(SBIconController<PageCutsController> *self
     [self pc_dealloc];
 }
 
+static void $SBIconController$unscatter$startTime$(SBIconController<PageCutsController> *self, SEL sel, BOOL unscatter, double startTime)
+{
+    static BOOL isFirstTime = YES;
+    if (isFirstTime) {
+        [UIView disableAnimation];
+
+        for (SBIcon *dockIcon in offscreenDockIcons) {
+            SBIconList *page = [iconModel iconListContainingIcon:dockIcon];
+            if (page && ![page isDock])
+                [page removeIcon:dockIcon compactEmptyLists:NO animate:NO];
+        }
+        [iconModel compactIconLists];
+        [iconModel saveIconState];
+
+        [UIView enableAnimation];
+
+        isFirstTime = NO;
+    }
+
+    [self pc_unscatter:unscatter startTime:startTime];
+}
+
 static void $SBIconController$clickedIcon$(SBIconController<PageCutsController> *self, SEL sel, SBIcon *icon)
 {
     NSString *ident = [icon displayIdentifier];
-    if ([ident hasPrefix:@"com.pagecuts"]) {
-        // Use identifier with format: com.pagecuts.pagenumber
+    if ([ident hasPrefix:@PAGECUT_PREFIX]) {
+        // Use identifier with format: PAGECUT_PREFIX.pagenumber
         // (e.g. com.pagecuts.2)
         NSArray *parts = [ident componentsSeparatedByString:@"."];
         if ([parts count] != 3) return;
@@ -95,13 +122,8 @@ static void $SBIconController$clickedIcon$(SBIconController<PageCutsController> 
         object_getInstanceVariable(self, "_currentIconListIndex",
             reinterpret_cast<void **>(&currentIndex));
 
-        // Get the number of pages
-        Class $SBIconModel(objc_getClass("SBIconModel"));
-        SBIconModel *iconModel = [$SBIconModel sharedInstance];
-        NSMutableArray *pages = [iconModel iconLists];
-
         if ((pageNumber != currentIndex) &&
-                (pageNumber < (int)[pages count])) {
+                (pageNumber < (int)[[iconModel iconLists] count])) {
             // Switch to requested page
             [self scrollToIconListAtIndex:pageNumber animate:NO];
         } else if (pageNumber == 0) {
@@ -111,33 +133,22 @@ static void $SBIconController$clickedIcon$(SBIconController<PageCutsController> 
 
             // NOTE: no need to copy; tests show the list creates a new array
             NSArray *prevIcons = [[dock icons] retain];
+            [dock removeAllIcons];
 
-            if (offscreenDockIcons != nil) {
-                // Restore saved state
-                [dock removeAllIcons];
-                int i = 0;
-                for (SBIcon *dockIcon in offscreenDockIcons) {
-                    SBIconList *page = [iconModel iconListContainingIcon:dockIcon];
-                    if (page)
-                        [page removeIcon:dockIcon compactEmptyLists:NO animate:NO];
-                    [dock placeIcon:dockIcon atX:i++ Y:0 animate:NO moveNow:YES];
-                }
-                [offscreenDockIcons release];
-                [iconModel saveIconState];
-            } else {
-                // Remove all icons except for page 0 icon
-                for (id dockIcon in [dock icons])
-                    if (![[dockIcon displayIdentifier] isEqualToString:@"com.pagecuts.0"])
-                        [dock removeIcon:dockIcon compactEmptyLists:NO animate:NO];
-            }
-
-            // Refresh the dock to account for any changes
+            // Restore saved state
+            int i = 0;
+            for (SBIcon *dockIcon in offscreenDockIcons)
+                [dock placeIcon:dockIcon atX:i++ Y:0 animate:NO moveNow:YES];
             [dock layoutIconsNow];
 
-            // Save list of off-screen dock icons
+            // Store list of off-screen dock icons
+            [offscreenDockIcons release];
             offscreenDockIcons = prevIcons;
 
-            // Also save a list to SpringBoard's preferences
+            // Save state of pages
+            [iconModel saveIconState];
+
+            // Also save list of off-screen icons to SpringBoard's preferences
             NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
             [defaults setObject:prevRepresentation forKey:@"pageCutsOffscreenDockIcons"];
             [defaults synchronize];
@@ -158,29 +169,8 @@ static void $SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$(S
     [self setIdleModeText:pageNames[index]];
 }
 
-static void $SBIconController$unscatter$startTime$(SBIconController<PageCutsController> *self, SEL sel, BOOL unscatter, double startTime)
-{
-    static BOOL isFirstTime = YES;
-    if (isFirstTime) {
-        NSLog(@"PageCuts: unscattter first time");
-        if (offscreenDockIcons != nil) {
-            Class $SBIconModel(objc_getClass("SBIconModel"));
-            SBIconModel *iconModel = [$SBIconModel sharedInstance];
-
-            for (SBIcon *dockIcon in offscreenDockIcons) {
-                SBIconList *page = [iconModel iconListContainingIcon:dockIcon];
-                if (page && ![page isDock])
-                    [page removeIcon:dockIcon compactEmptyLists:NO animate:NO];
-            }
-            [iconModel saveIconState];
-        }
-        isFirstTime = NO;
-    } else {
-        NSLog(@"PageCuts: not unscattter first time");
-    }
-
-    [self pc_unscatter:unscatter startTime:startTime];
-}
+//______________________________________________________________________________
+//______________________________________________________________________________
 
 static id $SBApplicationIcon$displayName(SBApplicationIcon<PageCutsIcon> *self, SEL sel)
 {
@@ -192,10 +182,8 @@ static id $SBApplicationIcon$displayName(SBApplicationIcon<PageCutsIcon> *self, 
     return name;
 }
 
-static void $SBIconList$resetWithDictionaryRepresentation$(SBIconList<PageCutsList> *self, SEL sel, id rep)
-{
-    [self pc_resetWithDictionaryRepresentation:rep];
-}
+//______________________________________________________________________________
+//______________________________________________________________________________
 
 extern "C" void PageCutsInitialize()
 {
@@ -212,7 +200,4 @@ extern "C" void PageCutsInitialize()
 
     Class $SBApplicationIcon(objc_getClass("SBApplicationIcon"));
     MSHookMessage($SBApplicationIcon, @selector(displayName), (IMP) &$SBApplicationIcon$displayName, "pc_");
-
-    Class $SBIconList(objc_getClass("SBIconList"));
-    MSHookMessage($SBIconList, @selector(resetWithDictionaryRepresentation:), (IMP) &$SBIconList$resetWithDictionaryRepresentation$, "pc_");
 }
