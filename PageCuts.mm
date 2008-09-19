@@ -1,3 +1,76 @@
+/**
+ * Name: PageCuts
+ * Type: iPhone OS 2.x SpringBoard extension (MobileSubstrate-based)
+ * Author: Lance Fetters (aka. ashikase)
+ * Last-modified: 2008-09-19 23:17:07
+ *
+ * Description:
+ * ------------
+ *   This is an extension to SpringBoard that allows for the creation of icons
+ *   that act as shortcuts ("pagecuts") to SpringBoard's different icon pages.
+ *
+ * Features:
+ * ---------
+ * - Pagecuts can be placed on any page, or in the dock
+ * - Pages for which a pagecut exists gain a title bar;
+ *   the title is obtained from the name of the pagecut
+ * - The pagecut for the first page (page zero) is special;
+ *   if it is placed in the dock, it allows for the toggling
+ *   of a secondary dock (when tapped while already on page zero)
+ *   - When used in conjunction with the FiveIconDock extension,
+ *     this allows for a maximum of 9 dock icons (page zero icon + 4 + 4)
+ *
+ * Limitations:
+ * ------------
+ * - SpringBoard (and thus PageCuts) supports a maximum of 9 pages
+ * - Currently only allows toggling between two docks
+ *
+ * Usage:
+ * ------
+ *   PageCuts currently uses application bundles for pagecuts.
+ *   (Note that this may change in a future version.)
+ *
+ *   To create a pagecut, make a new app folder in your /Applications
+ *   directory (eg. /Applications/MyPageCut.app). This directory should
+ *   contain two files:
+ *   - Icon.png : this is the icon for your pagecut
+ *   - Info.plist : this contains an identifier that defines the target page
+ *
+ *   The easiest way to make an Info.plist file is to copy one from an
+ *   existing application (eg. /Applications/Cydia.app/Info.plist), and
+ *   modify the CFBundleIdentifier parameter. The parameter should use the
+ *   format "com.pagecuts.PAGE_NUMBER", where PAGE_NUMBER is a number 0-8
+ *   identifying the target page.
+ *
+ *   Once you have finished creating your pagecuts, respring or reboot
+ *   for the icons to show up in SpringBoard
+ *
+ * Tips:
+ * -----
+ * - To help keep your /Applications directory organized, PageCuts
+ *   supports using a special prefix, "Folder_". Any pagecut whose app
+ *   folder is named in the form Folder_NAME (eg. "Folder_Media") will
+ *   show up in SpringBoard as simply NAME.
+ *
+ * Compilation:
+ * ------------
+ *   This code requires the MobileSubstrate library and headers;
+ *   the MobileSubstrate source can be obtained via Subversion at:
+ *   http://svn.saurik.com/repos/menes/trunk/mobilesubstrate
+ *
+ *   Compile with following command:
+ *
+ *   arm-apple-darwin-g++ -dynamiclib -O2 -Wall -Werror -o PageCuts.dylib \
+ *   PageCuts.mm -init _PageCutsInitialize -lobjc -framework CoreFoundation \
+ *   -framework Foundation -framework UIKit -framework CoreGraphics \
+ *   -F${IPHONT_SYS_ROOT}/System/Library/PrivateFrameworks \
+ *   -I$(MOBILESUBTRATE_INCLUDE_PATH) -L$(MOBILESUBTRATE_LIB_PATH) -lsubstrate
+ *
+ *   The resulting PageCuts.dylib should be placed on the iPhone/Pod
+ *   under /Library/MobileSubstrate/DynamicLibraries/
+ */
+
+
 #include <substrate.h>
 
 #import <CoreGraphics/CGGeometry.h>
@@ -175,7 +248,7 @@ static void $SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$(S
 static id $SBApplicationIcon$displayName(SBApplicationIcon<PageCutsIcon> *self, SEL sel)
 {
     // If the icon's name starts with NAME_PREFIX, remove the prefix
-    // FIXME: currently, this can affect *all icons*, not just page cuts
+    // FIXME: currently, this can affect *all icons*, not just pagecuts
     NSString *name = [self pc_displayName];
     if ([name hasPrefix:@NAME_PREFIX])
         name = [name substringFromIndex:strlen(NAME_PREFIX)];
