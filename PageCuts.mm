@@ -2,7 +2,7 @@
  * Name: PageCuts
  * Type: iPhone OS 2.x SpringBoard extension (MobileSubstrate-based)
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-09-19 23:17:07
+ * Last-modified: 2008-09-20 01:21:28
  *
  * Description:
  * ------------
@@ -140,12 +140,10 @@ static id $SBIconController$init(SBIconController<PageCutsController> *self, SEL
             // NOTE: empty slots are represented by NSNumber 0
             if ([iconInfo isKindOfClass:[NSDictionary class]]) {
                 NSString *identifier = [iconInfo objectForKey:@"displayIdentifier"];
-                [iconArray addObject:[iconModel iconForDisplayIdentifier:identifier]];
+                SBIcon *icon = [iconModel iconForDisplayIdentifier:identifier];
+                if (icon) [iconArray addObject:icon];
             }
         }
-        if ([iconArray count] == 0)
-            // Toggled dock must always contain the page-0 icon for toggling
-            [iconArray addObject:[iconModel iconForDisplayIdentifier:@PAGECUT_PREFIX".0"]];
 
         offscreenDockIcons = iconArray;
     }
@@ -162,17 +160,19 @@ static void $SBIconController$unscatter$startTime$(SBIconController<PageCutsCont
 {
     static BOOL isFirstTime = YES;
     if (isFirstTime) {
-        [UIView disableAnimation];
+        if ([offscreenDockIcons count] != 0) {
+            [UIView disableAnimation];
 
-        for (SBIcon *dockIcon in offscreenDockIcons) {
-            SBIconList *page = [iconModel iconListContainingIcon:dockIcon];
-            if (page && ![page isDock])
-                [page removeIcon:dockIcon compactEmptyLists:NO animate:NO];
+            for (SBIcon *dockIcon in offscreenDockIcons) {
+                SBIconList *page = [iconModel iconListContainingIcon:dockIcon];
+                if (page && ![page isDock])
+                    [page removeIcon:dockIcon compactEmptyLists:NO animate:NO];
+            }
+            [iconModel compactIconLists];
+            [iconModel saveIconState];
+
+            [UIView enableAnimation];
         }
-        [iconModel compactIconLists];
-        [iconModel saveIconState];
-
-        [UIView enableAnimation];
 
         isFirstTime = NO;
     }
@@ -200,31 +200,39 @@ static void $SBIconController$clickedIcon$(SBIconController<PageCutsController> 
             // Switch to requested page
             [self scrollToIconListAtIndex:pageNumber animate:NO];
         } else if (pageNumber == 0) {
-            // Tapped page 0 icon while on page 0 screen (toggle dock)
+            // Tapped page 0 icon while on page 0 screen
             SBButtonBar *dock = [iconModel buttonBar];
-            NSDictionary *prevRepresentation = [dock dictionaryRepresentation];
+            if ([dock containsIcon:icon]) {
+                // Icon is in dock; Toggle the dock
+                NSDictionary *prevRepresentation = [dock dictionaryRepresentation];
 
-            // NOTE: no need to copy; tests show the list creates a new array
-            NSArray *prevIcons = [[dock icons] retain];
-            [dock removeAllIcons];
+                // NOTE: no need to copy; tests show the list creates a new array
+                NSArray *prevIcons = [[dock icons] retain];
+                [dock removeAllIcons];
 
-            // Restore saved state
-            int i = 0;
-            for (SBIcon *dockIcon in offscreenDockIcons)
-                [dock placeIcon:dockIcon atX:i++ Y:0 animate:NO moveNow:YES];
-            [dock layoutIconsNow];
+                if ([offscreenDockIcons count] != 0) {
+                    // Restore saved state
+                    int i = 0;
+                    for (SBIcon *dockIcon in offscreenDockIcons)
+                        [dock placeIcon:dockIcon atX:i++ Y:0 animate:NO moveNow:YES];
+                } else {
+                    // Toggled dock must always contain the page-0 icon for toggling
+                    [dock placeIcon:icon atX:0 Y:0 animate:NO moveNow:YES];
+                }
+                [dock layoutIconsNow];
 
-            // Store list of off-screen dock icons
-            [offscreenDockIcons release];
-            offscreenDockIcons = prevIcons;
+                // Store list of off-screen dock icons
+                [offscreenDockIcons release];
+                offscreenDockIcons = prevIcons;
 
-            // Save state of pages
-            [iconModel saveIconState];
+                // Save state of pages
+                [iconModel saveIconState];
 
-            // Also save list of off-screen icons to SpringBoard's preferences
-            NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-            [defaults setObject:prevRepresentation forKey:@"pageCutsOffscreenDockIcons"];
-            [defaults synchronize];
+                // Also save list of off-screen icons to SpringBoard's preferences
+                NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+                [defaults setObject:prevRepresentation forKey:@"pageCutsOffscreenDockIcons"];
+                [defaults synchronize];
+            }
         }
     } else {
         // Regular application icon
