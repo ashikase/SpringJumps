@@ -1,20 +1,20 @@
 /**
- * Name: PageCuts
+ * Name: SpringJumps
  * Type: iPhone OS 2.x SpringBoard extension (MobileSubstrate-based)
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-09-20 01:21:28
+ * Last-modified: 2008-09-21 19:00:30
  *
  * Description:
  * ------------
  *   This is an extension to SpringBoard that allows for the creation of icons
- *   that act as shortcuts ("pagecuts") to SpringBoard's different icon pages.
+ *   that act as shortcuts to SpringBoard's different icon pages.
  *
  * Features:
  * ---------
- * - Pagecuts can be placed on any page, or in the dock
- * - Pages for which a pagecut exists gain a title bar;
- *   the title is obtained from the name of the pagecut
- * - The pagecut for the first page (page zero) is special;
+ * - Shortcuts can be placed on any page, or in the dock
+ * - Pages for which a shortcut exists gain a title bar;
+ *   the title is obtained from the name of the shortcut
+ * - The shortcut for the first page (page zero) is special;
  *   if it is placed in the dock, it allows for the toggling
  *   of a secondary dock (when tapped while already on page zero)
  *   - When used in conjunction with the FiveIconDock extension,
@@ -22,33 +22,33 @@
  *
  * Limitations:
  * ------------
- * - SpringBoard (and thus PageCuts) supports a maximum of 9 pages
+ * - SpringBoard (and thus SpringJumps) supports a maximum of 9 pages
  * - Currently only allows toggling between two docks
  *
  * Usage:
  * ------
- *   PageCuts currently uses application bundles for pagecuts.
+ *   SpringJumps currently uses application bundles for shortcuts.
  *   (Note that this may change in a future version.)
  *
- *   To create a pagecut, make a new app folder in your /Applications
- *   directory (eg. /Applications/MyPageCut.app). This directory should
+ *   To create a shortcut, make a new app folder in your /Applications
+ *   directory (eg. /Applications/MyShortCut.app). This directory should
  *   contain two files:
- *   - Icon.png : this is the icon for your pagecut
+ *   - Icon.png : this is the icon for your shortcut
  *   - Info.plist : this contains an identifier that defines the target page
  *
  *   The easiest way to make an Info.plist file is to copy one from an
  *   existing application (eg. /Applications/Cydia.app/Info.plist), and
  *   modify the CFBundleIdentifier parameter. The parameter should use the
- *   format "com.pagecuts.PAGE_NUMBER", where PAGE_NUMBER is a number 0-8
+ *   format "com.shortcuts.PAGE_NUMBER", where PAGE_NUMBER is a number 0-8
  *   identifying the target page.
  *
- *   Once you have finished creating your pagecuts, respring or reboot
+ *   Once you have finished creating your shortcuts, respring or reboot
  *   for the icons to show up in SpringBoard
  *
  * Tips:
  * -----
- * - To help keep your /Applications directory organized, PageCuts
- *   supports using a special prefix, "Folder_". Any pagecut whose app
+ * - To help keep your /Applications directory organized, SpringJumps
+ *   supports using a special prefix, "Folder_". Any shortcut whose app
  *   folder is named in the form Folder_NAME (eg. "Folder_Media") will
  *   show up in SpringBoard as simply NAME.
  *
@@ -60,13 +60,13 @@
  *
  *   Compile with following command:
  *
- *   arm-apple-darwin-g++ -dynamiclib -O2 -Wall -Werror -o PageCuts.dylib \
- *   PageCuts.mm -init _PageCutsInitialize -lobjc -framework CoreFoundation \
+ *   arm-apple-darwin-g++ -dynamiclib -O2 -Wall -Werror -o SpringJumps.dylib \
+ *   SpringJumps.mm -init _SpringJumpsInitialize -lobjc -framework CoreFoundation \
  *   -framework Foundation -framework UIKit -framework CoreGraphics \
  *   -F${IPHONT_SYS_ROOT}/System/Library/PrivateFrameworks \
  *   -I$(MOBILESUBTRATE_INCLUDE_PATH) -L$(MOBILESUBTRATE_LIB_PATH) -lsubstrate
  *
- *   The resulting PageCuts.dylib should be placed on the iPhone/Pod
+ *   The resulting SpringJumps.dylib should be placed on the iPhone/Pod
  *   under /Library/MobileSubstrate/DynamicLibraries/
  */
 
@@ -88,22 +88,22 @@
 
 #import <UIKit/UIView-Animation.h>
 
-@protocol PageCutsController
-- (id) pc_init;
-- (void) pc_dealloc;
-- (void) pc_unscatter:(BOOL)unscatter startTime:(double)startTime;
-- (void) pc_clickedIcon:(SBIcon *)icon;
-- (void) pc_updateCurrentIconListIndexUpdatingPageIndicator:(BOOL)update;
+@protocol SpringJumpsController
+- (id) sj_init;
+- (void) sj_dealloc;
+- (void) sj_unscatter:(BOOL)unscatter startTime:(double)startTime;
+- (void) sj_clickedIcon:(SBIcon *)icon;
+- (void) sj_updateCurrentIconListIndexUpdatingPageIndicator:(BOOL)update;
 @end
 
-@protocol PageCutsIcon
-- (id) pc_displayName;
+@protocol SpringJumpsIcon
+- (id) sj_displayName;
 @end
 
 #define MAX_DOCK_ICONS 5
 #define MAX_PAGES 9
 #define NAME_PREFIX "Folder_"
-#define PAGECUT_PREFIX "com.pagecuts"
+#define SHORTCUT_PREFIX "com.pagecuts"
 
 
 static SBIconModel *iconModel = nil;
@@ -111,9 +111,9 @@ static SBIconModel *iconModel = nil;
 static NSString *pageNames[MAX_PAGES] = {nil};
 static NSArray *offscreenDockIcons = nil;
 
-static id $SBIconController$init(SBIconController<PageCutsController> *self, SEL sel)
+static id $SBIconController$init(SBIconController<SpringJumpsController> *self, SEL sel)
 {
-    self = [self pc_init];
+    self = [self sj_init];
     if (self) {
         Class $SBIconModel(objc_getClass("SBIconModel"));
         iconModel = [$SBIconModel sharedInstance];
@@ -121,7 +121,7 @@ static id $SBIconController$init(SBIconController<PageCutsController> *self, SEL
         // Load and cache page names
         for (int i = 0; i < MAX_PAGES; i++) {
             SBIcon *icon = [iconModel iconForDisplayIdentifier:
-                [NSString stringWithFormat:@PAGECUT_PREFIX".%d", i]];
+                [NSString stringWithFormat:@SHORTCUT_PREFIX".%d", i]];
             if (icon) {
                 NSString *name = [icon displayName];
                 if ([name hasPrefix:@NAME_PREFIX])
@@ -134,7 +134,7 @@ static id $SBIconController$init(SBIconController<PageCutsController> *self, SEL
         // Restore any previously saved list of off-screen Dock icons
         NSMutableArray *iconArray = [[NSMutableArray alloc] initWithCapacity:MAX_DOCK_ICONS];
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        NSDictionary *dict = [defaults objectForKey:@"pageCutsOffscreenDockIcons"];
+        NSDictionary *dict = [defaults objectForKey:@"springJumpsOffscreenDockIcons"];
         NSArray *row = [[dict objectForKey:@"iconMatrix"] objectAtIndex:0];
         for (id iconInfo in row) {
             // NOTE: empty slots are represented by NSNumber 0
@@ -150,13 +150,13 @@ static id $SBIconController$init(SBIconController<PageCutsController> *self, SEL
     return self;
 }
 
-static void $SBIconController$dealloc(SBIconController<PageCutsController> *self, SEL sel)
+static void $SBIconController$dealloc(SBIconController<SpringJumpsController> *self, SEL sel)
 {
     [offscreenDockIcons release];
-    [self pc_dealloc];
+    [self sj_dealloc];
 }
 
-static void $SBIconController$unscatter$startTime$(SBIconController<PageCutsController> *self, SEL sel, BOOL unscatter, double startTime)
+static void $SBIconController$unscatter$startTime$(SBIconController<SpringJumpsController> *self, SEL sel, BOOL unscatter, double startTime)
 {
     static BOOL isFirstTime = YES;
     if (isFirstTime) {
@@ -177,14 +177,14 @@ static void $SBIconController$unscatter$startTime$(SBIconController<PageCutsCont
         isFirstTime = NO;
     }
 
-    [self pc_unscatter:unscatter startTime:startTime];
+    [self sj_unscatter:unscatter startTime:startTime];
 }
 
-static void $SBIconController$clickedIcon$(SBIconController<PageCutsController> *self, SEL sel, SBIcon *icon)
+static void $SBIconController$clickedIcon$(SBIconController<SpringJumpsController> *self, SEL sel, SBIcon *icon)
 {
     NSString *ident = [icon displayIdentifier];
-    if ([ident hasPrefix:@PAGECUT_PREFIX]) {
-        // Use identifier with format: PAGECUT_PREFIX.pagenumber
+    if ([ident hasPrefix:@SHORTCUT_PREFIX]) {
+        // Use identifier with format: SHORTCUT_PREFIX.pagenumber
         // (e.g. com.pagecuts.2)
         NSArray *parts = [ident componentsSeparatedByString:@"."];
         if ([parts count] != 3) return;
@@ -230,19 +230,19 @@ static void $SBIconController$clickedIcon$(SBIconController<PageCutsController> 
 
                 // Also save list of off-screen icons to SpringBoard's preferences
                 NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-                [defaults setObject:prevRepresentation forKey:@"pageCutsOffscreenDockIcons"];
+                [defaults setObject:prevRepresentation forKey:@"springJumpsOffscreenDockIcons"];
                 [defaults synchronize];
             }
         }
     } else {
         // Regular application icon
-        [self pc_clickedIcon:icon];
+        [self sj_clickedIcon:icon];
     }
 }
 
-static void $SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$(SBIconController<PageCutsController> *self, SEL sel, BOOL update)
+static void $SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$(SBIconController<SpringJumpsController> *self, SEL sel, BOOL update)
 {
-    [self pc_updateCurrentIconListIndexUpdatingPageIndicator:update];
+    [self sj_updateCurrentIconListIndexUpdatingPageIndicator:update];
 
     // Update page title-bar
     int index;
@@ -253,11 +253,11 @@ static void $SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$(S
 //______________________________________________________________________________
 //______________________________________________________________________________
 
-static id $SBApplicationIcon$displayName(SBApplicationIcon<PageCutsIcon> *self, SEL sel)
+static id $SBApplicationIcon$displayName(SBApplicationIcon<SpringJumpsIcon> *self, SEL sel)
 {
     // If the icon's name starts with NAME_PREFIX, remove the prefix
-    // FIXME: currently, this can affect *all icons*, not just pagecuts
-    NSString *name = [self pc_displayName];
+    // FIXME: currently, this can affect *all icons*, not just shortcuts
+    NSString *name = [self sj_displayName];
     if ([name hasPrefix:@NAME_PREFIX])
         name = [name substringFromIndex:strlen(NAME_PREFIX)];
     return name;
@@ -266,19 +266,19 @@ static id $SBApplicationIcon$displayName(SBApplicationIcon<PageCutsIcon> *self, 
 //______________________________________________________________________________
 //______________________________________________________________________________
 
-extern "C" void PageCutsInitialize()
+extern "C" void SpringJumpsInitialize()
 {
     if (objc_getClass("SpringBoard") == nil)
         return;
 
     Class $SBIconController(objc_getClass("SBIconController"));
-    MSHookMessage($SBIconController, @selector(init), (IMP) &$SBIconController$init, "pc_");
-    MSHookMessage($SBIconController, @selector(dealloc), (IMP) &$SBIconController$dealloc, "pc_");
-    MSHookMessage($SBIconController, @selector(clickedIcon:), (IMP) &$SBIconController$clickedIcon$, "pc_");
+    MSHookMessage($SBIconController, @selector(init), (IMP) &$SBIconController$init, "sj_");
+    MSHookMessage($SBIconController, @selector(dealloc), (IMP) &$SBIconController$dealloc, "sj_");
+    MSHookMessage($SBIconController, @selector(clickedIcon:), (IMP) &$SBIconController$clickedIcon$, "sj_");
     MSHookMessage($SBIconController, @selector(updateCurrentIconListIndexUpdatingPageIndicator:),
-        (IMP) &$SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$, "pc_");
-    MSHookMessage($SBIconController, @selector(unscatter:startTime:), (IMP) &$SBIconController$unscatter$startTime$, "pc_");
+        (IMP) &$SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$, "sj_");
+    MSHookMessage($SBIconController, @selector(unscatter:startTime:), (IMP) &$SBIconController$unscatter$startTime$, "sj_");
 
     Class $SBApplicationIcon(objc_getClass("SBApplicationIcon"));
-    MSHookMessage($SBApplicationIcon, @selector(displayName), (IMP) &$SBApplicationIcon$displayName, "pc_");
+    MSHookMessage($SBApplicationIcon, @selector(displayName), (IMP) &$SBApplicationIcon$displayName, "sj_");
 }

@@ -2,7 +2,7 @@
 
 set -e
 
-FILE_NAME=PageCuts.dylib
+FILE_NAME=SpringJumps.dylib
 
 make clean
 make 
