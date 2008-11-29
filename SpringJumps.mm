@@ -2,7 +2,7 @@
  * Name: SpringJumps
  * Type: iPhone OS 2.x SpringBoard extension (MobileSubstrate-based)
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-09-21 19:00:30
+ * Last-modified: 2008-11-28 20:39:35
  *
  * Description:
  * ------------
@@ -45,13 +45,6 @@
  *   Once you have finished creating your shortcuts, respring or reboot
  *   for the icons to show up in SpringBoard
  *
- * Tips:
- * -----
- * - To help keep your /Applications directory organized, SpringJumps
- *   supports using a special prefix, "Folder_". Any shortcut whose app
- *   folder is named in the form Folder_NAME (eg. "Folder_Media") will
- *   show up in SpringBoard as simply NAME.
- *
  * Compilation:
  * ------------
  *   This code requires the MobileSubstrate library and headers;
@@ -68,6 +61,11 @@
  *
  *   The resulting SpringJumps.dylib should be placed on the iPhone/Pod
  *   under /Library/MobileSubstrate/DynamicLibraries/
+ *
+ * Acknowledgements:
+ * -----------------
+ *   Thanks go out to Jay Freeman (saurik) for his work on MobileSubstrate
+ *   (and all things iPhone).
  */
 
 
@@ -89,11 +87,12 @@
 #import <UIKit/UIView-Animation.h>
 
 @protocol SpringJumpsController
-- (id) sj_init;
-- (void) sj_dealloc;
-- (void) sj_unscatter:(BOOL)unscatter startTime:(double)startTime;
-- (void) sj_clickedIcon:(SBIcon *)icon;
-- (void) sj_updateCurrentIconListIndexUpdatingPageIndicator:(BOOL)update;
+- (id)sj_init;
+- (void)sj_dealloc;
+- (void)sj_unscatter:(BOOL)unscatter startTime:(double)startTime;
+- (void)sj_clickedIcon:(SBIcon *)icon;
+- (void)sj_updateCurrentIconListIndexUpdatingPageIndicator:(BOOL)update;
+- (void)sj_updateCurrentIconListIndex;
 @end
 
 @protocol SpringJumpsIcon
@@ -102,8 +101,7 @@
 
 #define MAX_DOCK_ICONS 5
 #define MAX_PAGES 9
-#define NAME_PREFIX "Folder_"
-#define SHORTCUT_PREFIX "com.pagecuts"
+#define SHORTCUT_PREFIX "jp.ashikase.springjumps"
 
 
 static SBIconModel *iconModel = nil;
@@ -122,13 +120,8 @@ static id $SBIconController$init(SBIconController<SpringJumpsController> *self, 
         for (int i = 0; i < MAX_PAGES; i++) {
             SBIcon *icon = [iconModel iconForDisplayIdentifier:
                 [NSString stringWithFormat:@SHORTCUT_PREFIX".%d", i]];
-            if (icon) {
-                NSString *name = [icon displayName];
-                if ([name hasPrefix:@NAME_PREFIX])
-                    pageNames[i] = [[name substringFromIndex:strlen(NAME_PREFIX)] retain];
-                else
-                    pageNames[i] = [name copy];
-            }
+            if (icon)
+                pageNames[i] = [[icon displayName] copy];
         }
 
         // Restore any previously saved list of off-screen Dock icons
@@ -187,8 +180,8 @@ static void $SBIconController$clickedIcon$(SBIconController<SpringJumpsControlle
         // Use identifier with format: SHORTCUT_PREFIX.pagenumber
         // (e.g. com.pagecuts.2)
         NSArray *parts = [ident componentsSeparatedByString:@"."];
-        if ([parts count] != 3) return;
-        int pageNumber = [[parts objectAtIndex:2] intValue];
+        if ([parts count] != 4) return;
+        int pageNumber = [[parts objectAtIndex:3] intValue];
 
         // Get the current page index
         int currentIndex;
@@ -240,27 +233,28 @@ static void $SBIconController$clickedIcon$(SBIconController<SpringJumpsControlle
     }
 }
 
+// NOTE: The following method is for firmware 2.0.x
 static void $SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$(SBIconController<SpringJumpsController> *self, SEL sel, BOOL update)
 {
     [self sj_updateCurrentIconListIndexUpdatingPageIndicator:update];
 
     // Update page title-bar
-    int index;
-    object_getInstanceVariable(self, "_currentIconListIndex", reinterpret_cast<void **>(&index));
-    [self setIdleModeText:pageNames[index]];
+    Ivar ivar = class_getInstanceVariable([self class], "_currentIconListIndex");
+    int *_currentIconListIndex = (int *)((char *)self + ivar_getOffset(ivar));
+
+    [self setIdleModeText:pageNames[*_currentIconListIndex]];
 }
 
-//______________________________________________________________________________
-//______________________________________________________________________________
-
-static id $SBApplicationIcon$displayName(SBApplicationIcon<SpringJumpsIcon> *self, SEL sel)
+// NOTE: The following method is for firmware 2.1+
+static void $SBIconController$updateCurrentIconListIndex(SBIconController<SpringJumpsController> *self, SEL sel)
 {
-    // If the icon's name starts with NAME_PREFIX, remove the prefix
-    // FIXME: currently, this can affect *all icons*, not just shortcuts
-    NSString *name = [self sj_displayName];
-    if ([name hasPrefix:@NAME_PREFIX])
-        name = [name substringFromIndex:strlen(NAME_PREFIX)];
-    return name;
+    [self sj_updateCurrentIconListIndex];
+
+    // Update page title-bar
+    Ivar ivar = class_getInstanceVariable([self class], "_currentIconListIndex");
+    int *_currentIconListIndex = (int *)((char *)self + ivar_getOffset(ivar));
+
+    [self setIdleModeText:pageNames[*_currentIconListIndex]];
 }
 
 //______________________________________________________________________________
@@ -275,10 +269,12 @@ extern "C" void SpringJumpsInitialize()
     MSHookMessage($SBIconController, @selector(init), (IMP) &$SBIconController$init, "sj_");
     MSHookMessage($SBIconController, @selector(dealloc), (IMP) &$SBIconController$dealloc, "sj_");
     MSHookMessage($SBIconController, @selector(clickedIcon:), (IMP) &$SBIconController$clickedIcon$, "sj_");
-    MSHookMessage($SBIconController, @selector(updateCurrentIconListIndexUpdatingPageIndicator:),
-        (IMP) &$SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$, "sj_");
     MSHookMessage($SBIconController, @selector(unscatter:startTime:), (IMP) &$SBIconController$unscatter$startTime$, "sj_");
 
-    Class $SBApplicationIcon(objc_getClass("SBApplicationIcon"));
-    MSHookMessage($SBApplicationIcon, @selector(displayName), (IMP) &$SBApplicationIcon$displayName, "sj_");
+    if ([$SBIconController respondsToSelector:@selector(updateCurrentIconListIndex)])
+        MSHookMessage($SBIconController, @selector(updateCurrentIconListIndex),
+                (IMP) &$SBIconController$updateCurrentIconListIndex, "sj_");
+    else
+        MSHookMessage($SBIconController, @selector(updateCurrentIconListIndexUpdatingPageIndicator:),
+                (IMP) &$SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$, "sj_");
 }
