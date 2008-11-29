@@ -1,18 +1,33 @@
-PKG_ROOT=/opt/iPhone/sys
-SUB_PATH=/files/Platforms/iPhone/build/Users/saurik/mobilesubstrate
+NAME = SpringJumps
 
-name = SpringJumps
-target = arm-apple-darwin9-
+# These paths must be changed to match the compilation environment
+SYS_PATH = /opt/iPhone/sys
+SUB_PATH=/files/Platforms/iPhone/Projects/Others/saurik/mobilesubstrate
 
-all: $(name).dylib $(control)
+CXX = arm-apple-darwin9-g++
+CXXFLAGS = -ggdb -O2 -Wall -Werror -I$(SUB_PATH) -IPrefsApp 
+LDFLAGS = -lobjc \
+		  -framework CoreFoundation \
+		  -framework Foundation \
+		  -framework UIKit \
+		  -F$(SYS_PATH)/System/Library/PrivateFrameworks \
+		  -L$(SUB_PATH) -lsubstrate
+
+SRCS  = \
+		SpringJumps.mm \
+		PrefsApp/ShortcutConfig.m
+
+all: $(NAME).dylib $(control)
 
 clean:
-	rm -f $(name).dylib
+	rm -f $(NAME).dylib
 
-strip:
-	$(target)strip $(name).dylib
+# Replace 'iphone' with the IP or hostname of your device
+install:
+	ssh root@iphone rm -f /Library/MobileSubstrate/DynamicLibraries/$(NAME).dylib
+	scp $(NAME).dylib root@iphone:/Library/MobileSubstrate/DynamicLibraries/
 
-$(name).dylib: SpringJumps.mm
-	$(target)g++ -dynamiclib -ggdb -O2 -Wall -Werror -o $@ $(filter %.mm,$^) -init _SpringJumpsInitialize -lobjc -framework CoreFoundation -framework Foundation -framework UIKit -framework CoreGraphics -F${PKG_ROOT}/System/Library/PrivateFrameworks -I$(SUB_PATH) -L$(SUB_PATH) -lsubstrate
+$(NAME).dylib: $(SRCS)
+	$(CXX) -dynamiclib $(CXXFLAGS) -o $@ $(filter %.mm,$^) $(filter %.m,$^) -init _SpringJumpsInitialize $(LDFLAGS)
 
-.PHONY: all clean strip
+.PHONY: all clean
