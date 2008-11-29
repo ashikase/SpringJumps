@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-11-29 10:32:14
+ * Last-modified: 2008-11-29 10:35:01
  */
 
 /**
@@ -58,17 +58,13 @@
 
 #import <UIKit/UIView-Animation.h>
 
-@protocol SpringJumpsController
+@interface SBIconController (SpringJumps)
 - (id)sj_init;
 - (void)sj_dealloc;
 - (void)sj_unscatter:(BOOL)unscatter startTime:(double)startTime;
 - (void)sj_clickedIcon:(SBIcon *)icon;
 - (void)sj_updateCurrentIconListIndexUpdatingPageIndicator:(BOOL)update;
 - (void)sj_updateCurrentIconListIndex;
-@end
-
-@protocol SpringJumpsIcon
-- (id) sj_displayName;
 @end
 
 #define MAX_DOCK_ICONS 5
@@ -81,7 +77,7 @@ static SBIconModel *iconModel = nil;
 static NSString *pageNames[MAX_PAGES] = {nil};
 static NSArray *offscreenDockIcons = nil;
 
-static id $SBIconController$init(SBIconController<SpringJumpsController> *self, SEL sel)
+static id $SBIconController$init(SBIconController *self, SEL sel)
 {
     self = [self sj_init];
     if (self) {
@@ -115,13 +111,13 @@ static id $SBIconController$init(SBIconController<SpringJumpsController> *self, 
     return self;
 }
 
-static void $SBIconController$dealloc(SBIconController<SpringJumpsController> *self, SEL sel)
+static void $SBIconController$dealloc(SBIconController *self, SEL sel)
 {
     [offscreenDockIcons release];
     [self sj_dealloc];
 }
 
-static void $SBIconController$unscatter$startTime$(SBIconController<SpringJumpsController> *self, SEL sel, BOOL unscatter, double startTime)
+static void $SBIconController$unscatter$startTime$(SBIconController *self, SEL sel, BOOL unscatter, double startTime)
 {
     static BOOL isFirstTime = YES;
     if (isFirstTime) {
@@ -145,7 +141,7 @@ static void $SBIconController$unscatter$startTime$(SBIconController<SpringJumpsC
     [self sj_unscatter:unscatter startTime:startTime];
 }
 
-static void $SBIconController$clickedIcon$(SBIconController<SpringJumpsController> *self, SEL sel, SBIcon *icon)
+static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIcon *icon)
 {
     NSString *ident = [icon displayIdentifier];
     if ([ident hasPrefix:@SHORTCUT_PREFIX]) {
@@ -206,7 +202,7 @@ static void $SBIconController$clickedIcon$(SBIconController<SpringJumpsControlle
 }
 
 // NOTE: The following method is for firmware 2.0.x
-static void $SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$(SBIconController<SpringJumpsController> *self, SEL sel, BOOL update)
+static void $SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$(SBIconController *self, SEL sel, BOOL update)
 {
     [self sj_updateCurrentIconListIndexUpdatingPageIndicator:update];
 
@@ -218,7 +214,7 @@ static void $SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$(S
 }
 
 // NOTE: The following method is for firmware 2.1+
-static void $SBIconController$updateCurrentIconListIndex(SBIconController<SpringJumpsController> *self, SEL sel)
+static void $SBIconController$updateCurrentIconListIndex(SBIconController *self, SEL sel)
 {
     [self sj_updateCurrentIconListIndex];
 
