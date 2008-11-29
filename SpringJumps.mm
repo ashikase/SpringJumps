@@ -1,78 +1,43 @@
 /**
  * Name: SpringJumps
  * Type: iPhone OS 2.x SpringBoard extension (MobileSubstrate-based)
+ * Description: Allows for the creation of icons that act as shortcuts
+ *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-11-29 10:29:38
+ * Last-modified: 2008-11-29 10:32:14
+ */
+
+/**
+ * Copyright (C) 2008  Lance Fetters (aka. ashikase)
+ * All rights reserved.
  *
- * Description:
- * ------------
- *   This is an extension to SpringBoard that allows for the creation of icons
- *   that act as shortcuts to SpringBoard's different icon pages.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
- * Features:
- * ---------
- * - Shortcuts can be placed on any page, or in the dock
- * - Pages for which a shortcut exists gain a title bar;
- *   the title is obtained from the name of the shortcut
- * - The shortcut for the first page (page zero) is special;
- *   if it is placed in the dock, it allows for the toggling
- *   of a secondary dock (if tapped while viewing page zero)
- *   - When used in conjunction with the FiveIconDock extension,
- *     this allows for a maximum of 9 dock icons (page zero icon + 4 + 4)
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
  *
- * Limitations:
- * ------------
- * - SpringBoard (and thus SpringJumps) supports a maximum of 9 pages
- * - Currently only allows toggling between two docks
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in
+ *    the documentation and/or other materials provided with the
+ *    distribution.
  *
- * Usage:
- * ------
- *   SpringJumps currently uses application bundles for shortcuts.
- *   (Note that this may change in a future version.)
+ * 3. The name of the author may not be used to endorse or promote
+ *    products derived from this software without specific prior
+ *    written permission.
  *
- *   The SpringJumps package comes with a set of nine application icons,
- *   and a preferences application for modifying the names/visible state
- *   of said icons; the following instructions are meant for those that
- *   are compiling the extension themselves, or simply wish to know how
- *   the extension functions.
- *
- *   To create a shortcut, make a new app folder in your /Applications
- *   directory (eg. /Applications/MyShortCut.app). This directory should
- *   contain two files:
- *   - Icon.png : this is the icon for your shortcut
- *   - Info.plist : this contains an identifier that defines the target page
- *
- *   The easiest way to make an Info.plist file is to copy one from an
- *   existing application (eg. /Applications/Cydia.app/Info.plist), and
- *   modify:
- *   - the CFBundleIdentifier parameter:
- *     The parameter should use the format "jp.ashikase.springjumps.PAGE_NUMBER",
- *     where PAGE_NUMBER is a number 0-8 identifying the target page.
- *   - the CFBundleDisplayName parameter:
- *     This parameter defines the name of your shortcut icon
- *     (You may need to create this parameter)
- *
- *   Once you have finished creating your shortcuts, respring or reboot
- *   for the icons to show up in SpringBoard
- *
- * Compilation:
- * ------------
- *   This code requires the MobileSubstrate library and headers;
- *   the MobileSubstrate source can be obtained via Subversion at:
- *   http://svn.saurik.com/repos/menes/trunk/mobilesubstrate
- *
- *   Compile using the accompanying Makefile:
- *
- *     make
- *
- *   The resulting SpringJumps.dylib should be placed on the iPhone/Pod
- *   under /Library/MobileSubstrate/DynamicLibraries/
- *
- * Acknowledgements:
- * -----------------
- *   Thanks go out to Jay Freeman (saurik) for his work on MobileSubstrate
- *   (and all things iPhone).
- *   Thanks also go out to WiFone for suggesting the name SpringJumps.
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 
 
