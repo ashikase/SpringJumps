@@ -2,7 +2,7 @@
  * Name: SpringJumps
  * Type: iPhone OS 2.x SpringBoard extension (MobileSubstrate-based)
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-11-28 20:39:35
+ * Last-modified: 2008-11-29 10:29:38
  *
  * Description:
  * ------------
@@ -16,7 +16,7 @@
  *   the title is obtained from the name of the shortcut
  * - The shortcut for the first page (page zero) is special;
  *   if it is placed in the dock, it allows for the toggling
- *   of a secondary dock (when tapped while already on page zero)
+ *   of a secondary dock (if tapped while viewing page zero)
  *   - When used in conjunction with the FiveIconDock extension,
  *     this allows for a maximum of 9 dock icons (page zero icon + 4 + 4)
  *
@@ -30,6 +30,12 @@
  *   SpringJumps currently uses application bundles for shortcuts.
  *   (Note that this may change in a future version.)
  *
+ *   The SpringJumps package comes with a set of nine application icons,
+ *   and a preferences application for modifying the names/visible state
+ *   of said icons; the following instructions are meant for those that
+ *   are compiling the extension themselves, or simply wish to know how
+ *   the extension functions.
+ *
  *   To create a shortcut, make a new app folder in your /Applications
  *   directory (eg. /Applications/MyShortCut.app). This directory should
  *   contain two files:
@@ -38,9 +44,13 @@
  *
  *   The easiest way to make an Info.plist file is to copy one from an
  *   existing application (eg. /Applications/Cydia.app/Info.plist), and
- *   modify the CFBundleIdentifier parameter. The parameter should use the
- *   format "com.shortcuts.PAGE_NUMBER", where PAGE_NUMBER is a number 0-8
- *   identifying the target page.
+ *   modify:
+ *   - the CFBundleIdentifier parameter:
+ *     The parameter should use the format "jp.ashikase.springjumps.PAGE_NUMBER",
+ *     where PAGE_NUMBER is a number 0-8 identifying the target page.
+ *   - the CFBundleDisplayName parameter:
+ *     This parameter defines the name of your shortcut icon
+ *     (You may need to create this parameter)
  *
  *   Once you have finished creating your shortcuts, respring or reboot
  *   for the icons to show up in SpringBoard
@@ -51,13 +61,9 @@
  *   the MobileSubstrate source can be obtained via Subversion at:
  *   http://svn.saurik.com/repos/menes/trunk/mobilesubstrate
  *
- *   Compile with following command:
+ *   Compile using the accompanying Makefile:
  *
- *   arm-apple-darwin-g++ -dynamiclib -O2 -Wall -Werror -o SpringJumps.dylib \
- *   SpringJumps.mm -init _SpringJumpsInitialize -lobjc -framework CoreFoundation \
- *   -framework Foundation -framework UIKit -framework CoreGraphics \
- *   -F${IPHONT_SYS_ROOT}/System/Library/PrivateFrameworks \
- *   -I$(MOBILESUBTRATE_INCLUDE_PATH) -L$(MOBILESUBTRATE_LIB_PATH) -lsubstrate
+ *     make
  *
  *   The resulting SpringJumps.dylib should be placed on the iPhone/Pod
  *   under /Library/MobileSubstrate/DynamicLibraries/
@@ -66,6 +72,7 @@
  * -----------------
  *   Thanks go out to Jay Freeman (saurik) for his work on MobileSubstrate
  *   (and all things iPhone).
+ *   Thanks also go out to WiFone for suggesting the name SpringJumps.
  */
 
 
