@@ -13,9 +13,7 @@ LDFLAGS = -lobjc \
 		  -F$(SYS_PATH)/System/Library/PrivateFrameworks \
 		  -L$(SUB_PATH) -lsubstrate
 
-SRCS  = \
-		SpringJumps.mm \
-		PrefsApp/ShortcutConfig.m
+SRCS  = SpringJumps.mm
 
 all: $(NAME).dylib $(control)
 
