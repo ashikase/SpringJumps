@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-11-30 13:53:39
+ * Last-modified: 2008-11-30 08:54:18
  */
 
 /**
@@ -61,7 +61,6 @@
 @interface SBIconController (SpringJumps)
 - (id)sj_init;
 - (void)sj_dealloc;
-- (void)sj_unscatter:(BOOL)unscatter startTime:(double)startTime;
 - (void)sj_clickedIcon:(SBIcon *)icon;
 - (void)sj_updateCurrentIconListIndexUpdatingPageIndicator:(BOOL)update;
 - (void)sj_updateCurrentIconListIndex;
@@ -75,7 +74,6 @@
 static SBIconModel *iconModel = nil;
 
 static NSString *pageNames[MAX_PAGES] = {nil};
-static NSArray *offscreenDockIcons = nil;
 
 static id $SBIconController$init(SBIconController *self, SEL sel)
 {
@@ -91,54 +89,15 @@ static id $SBIconController$init(SBIconController *self, SEL sel)
             if (icon)
                 pageNames[i] = [[icon displayName] copy];
         }
-
-        // Restore any previously saved list of off-screen Dock icons
-        NSMutableArray *iconArray = [[NSMutableArray alloc] initWithCapacity:MAX_DOCK_ICONS];
-        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        NSDictionary *dict = [defaults objectForKey:@"springJumpsOffscreenDockIcons"];
-        NSArray *row = [[dict objectForKey:@"iconMatrix"] objectAtIndex:0];
-        for (id iconInfo in row) {
-            // NOTE: empty slots are represented by NSNumber 0
-            if ([iconInfo isKindOfClass:[NSDictionary class]]) {
-                NSString *identifier = [iconInfo objectForKey:@"displayIdentifier"];
-                SBIcon *icon = [iconModel iconForDisplayIdentifier:identifier];
-                if (icon) [iconArray addObject:icon];
-            }
-        }
-
-        offscreenDockIcons = iconArray;
     }
     return self;
 }
 
 static void $SBIconController$dealloc(SBIconController *self, SEL sel)
 {
-    [offscreenDockIcons release];
+    for (int i = 0; i < MAX_PAGES; i++)
+        [pageNames[i] release];
     [self sj_dealloc];
-}
-
-static void $SBIconController$unscatter$startTime$(SBIconController *self, SEL sel, BOOL unscatter, double startTime)
-{
-    static BOOL isFirstTime = YES;
-    if (isFirstTime) {
-        if ([offscreenDockIcons count] != 0) {
-            [UIView disableAnimation];
-
-            for (SBIcon *dockIcon in offscreenDockIcons) {
-                SBIconList *page = [iconModel iconListContainingIcon:dockIcon];
-                if (page && ![page isDock])
-                    [page removeIcon:dockIcon compactEmptyLists:NO animate:NO];
-            }
-            [iconModel compactIconLists];
-            [iconModel saveIconState];
-
-            [UIView enableAnimation];
-        }
-
-        isFirstTime = NO;
-    }
-
-    [self sj_unscatter:unscatter startTime:startTime];
 }
 
 static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIcon *icon)
@@ -164,38 +123,9 @@ static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIc
             [self scrollToIconListAtIndex:pageNumber animate:NO];
         } else if (pageNumber == 0) {
             // Tapped page 0 icon while on page 0 screen
-            SBButtonBar *dock = [iconModel buttonBar];
-            if ([dock containsIcon:icon]) {
-                // Icon is in dock; Toggle the dock
-                NSDictionary *prevRepresentation = [dock dictionaryRepresentation];
-
-                // NOTE: no need to copy; tests show the list creates a new array
-                NSArray *prevIcons = [[dock icons] retain];
-                [dock removeAllIcons];
-
-                if ([offscreenDockIcons count] != 0) {
-                    // Restore saved state
-                    int i = 0;
-                    for (SBIcon *dockIcon in offscreenDockIcons)
-                        [dock placeIcon:dockIcon atX:i++ Y:0 animate:NO moveNow:YES];
-                } else {
-                    // Toggled dock must always contain the page-0 icon for toggling
-                    [dock placeIcon:icon atX:0 Y:0 animate:NO moveNow:YES];
-                }
-                [dock layoutIconsNow];
-
-                // Store list of off-screen dock icons
-                [offscreenDockIcons release];
-                offscreenDockIcons = prevIcons;
-
-                // Save state of pages
-                [iconModel saveIconState];
-
-                // Also save list of off-screen icons to SpringBoard's preferences
-                NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-                [defaults setObject:prevRepresentation forKey:@"springJumpsOffscreenDockIcons"];
-                [defaults synchronize];
-            }
+            // FIXME: this is for multiDock; attempt to find a better method
+            //        (for example, an option to "pass-through" icon clicks)
+            [self sj_clickedIcon:icon];
         }
     } else {
         // Regular application icon
@@ -239,7 +169,6 @@ extern "C" void SpringJumpsInitialize()
     MSHookMessage($SBIconController, @selector(init), (IMP) &$SBIconController$init, "sj_");
     MSHookMessage($SBIconController, @selector(dealloc), (IMP) &$SBIconController$dealloc, "sj_");
     MSHookMessage($SBIconController, @selector(clickedIcon:), (IMP) &$SBIconController$clickedIcon$, "sj_");
-    MSHookMessage($SBIconController, @selector(unscatter:startTime:), (IMP) &$SBIconController$unscatter$startTime$, "sj_");
 
     if (class_getInstanceMethod($SBIconController, @selector(updateCurrentIconListIndex)))
         MSHookMessage($SBIconController, @selector(updateCurrentIconListIndex),
