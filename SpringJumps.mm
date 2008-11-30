@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-11-29 17:14:17
+ * Last-modified: 2008-11-30 13:53:39
  */
 
 /**
@@ -146,7 +146,7 @@ static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIc
     NSString *ident = [icon displayIdentifier];
     if ([ident hasPrefix:@SHORTCUT_PREFIX]) {
         // Use identifier with format: SHORTCUT_PREFIX.pagenumber
-        // (e.g. com.pagecuts.2)
+        // (e.g. jp.ashikase.springjumps.2)
         NSArray *parts = [ident componentsSeparatedByString:@"."];
         if ([parts count] != 4)
             // SpringJumps preferences application
@@ -241,7 +241,7 @@ extern "C" void SpringJumpsInitialize()
     MSHookMessage($SBIconController, @selector(clickedIcon:), (IMP) &$SBIconController$clickedIcon$, "sj_");
     MSHookMessage($SBIconController, @selector(unscatter:startTime:), (IMP) &$SBIconController$unscatter$startTime$, "sj_");
 
-    if ([$SBIconController respondsToSelector:@selector(updateCurrentIconListIndex)])
+    if (class_getInstanceMethod($SBIconController, @selector(updateCurrentIconListIndex)))
         MSHookMessage($SBIconController, @selector(updateCurrentIconListIndex),
                 (IMP) &$SBIconController$updateCurrentIconListIndex, "sj_");
     else
