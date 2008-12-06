@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-06 18:23:02
+ * Last-modified: 2008-12-06 18:26:13
  */
 
 /**
@@ -166,6 +166,29 @@ static void $SBIconController$updateCurrentIconListIndex(SBIconController *self,
     setPageTitlesEnabled(showPageTitles);
 }
 
+//______________________________________________________________________________
+//______________________________________________________________________________
+
+@interface SBApplicationIcon (SpringJumps)
+- (NSString *)sj_displayName;
+@end
+
+static NSString * $SBApplicationIcon$displayName(SBApplicationIcon *self, SEL sel)
+{
+    NSString *ident = [self displayIdentifier];
+    if ([ident hasPrefix:@APP_ID]) {
+        // Use identifier with format: APP_ID.pagenumber
+        // (e.g. jp.ashikase.springjumps.2)
+        NSArray *parts = [ident componentsSeparatedByString:@"."];
+        if ([parts count] == 4) {
+            int pageNumber = [[parts objectAtIndex:3] intValue];
+            if (shortcutNames[pageNumber])
+                return shortcutNames[pageNumber];
+        }
+    }
+
+    return [self sj_displayName];
+}
 
 //______________________________________________________________________________
 //______________________________________________________________________________
@@ -175,6 +198,7 @@ extern "C" void SpringJumpsInitialize()
     if (objc_getClass("SpringBoard") == nil)
         return;
 
+    // Setup hooks
     Class $SBIconController(objc_getClass("SBIconController"));
     MSHookMessage($SBIconController, @selector(init), (IMP) &$SBIconController$init, "sj_");
     MSHookMessage($SBIconController, @selector(dealloc), (IMP) &$SBIconController$dealloc, "sj_");
@@ -186,4 +210,8 @@ extern "C" void SpringJumpsInitialize()
     else
         MSHookMessage($SBIconController, @selector(updateCurrentIconListIndexUpdatingPageIndicator:),
                 (IMP) &$SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$, "sj_");
+
+    Class $SBApplicationIcon(objc_getClass("SBApplicationIcon"));
+    MSHookMessage($SBApplicationIcon, @selector(displayName), (IMP) &$SBApplicationIcon$displayName, "sj_");
+
 }
