@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-06 18:47:33
+ * Last-modified: 2008-12-06 18:57:48
  */
 
 /**
@@ -103,14 +103,14 @@ static void loadPreferences()
 //______________________________________________________________________________
 
 @interface SBIconModel (SpringJumps)
-- (id)sj_init;
-- (void)sj_dealloc;
+- (id)sjmp_init;
+- (void)sjmp_dealloc;
 @end
 
 static id $SBIconModel$init(SBIconModel *self, SEL sel)
 {
     loadPreferences();
-    self = [self sj_init];
+    self = [self sjmp_init];
     if (self) {
         // NOTE: In case the preferences file is missing or corrupt, take
         //       shorcut names from the shorcut folders' Info.plist files
@@ -131,16 +131,16 @@ static void $SBIconModel$dealloc(SBIconModel *self, SEL sel)
 {
     for (int i = 0; i < MAX_PAGES; i++)
         [shortcutNames[i] release];
-    [self sj_dealloc];
+    [self sjmp_dealloc];
 }
 
 //______________________________________________________________________________
 //______________________________________________________________________________
 
 @interface SBIconController (SpringJumps)
-- (void)sj_clickedIcon:(SBIcon *)icon;
-- (void)sj_updateCurrentIconListIndexUpdatingPageIndicator:(BOOL)update;
-- (void)sj_updateCurrentIconListIndex;
+- (void)sjmp_clickedIcon:(SBIcon *)icon;
+- (void)sjmp_updateCurrentIconListIndexUpdatingPageIndicator:(BOOL)update;
+- (void)sjmp_updateCurrentIconListIndex;
 @end
 
 static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIcon *icon)
@@ -152,7 +152,7 @@ static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIc
         NSArray *parts = [ident componentsSeparatedByString:@"."];
         if ([parts count] != 4)
             // SpringJumps preferences application
-            return [self sj_clickedIcon:icon];
+            return [self sjmp_clickedIcon:icon];
         int pageNumber = [[parts objectAtIndex:3] intValue];
 
         // Get the current page index
@@ -170,11 +170,11 @@ static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIc
             // Tapped page 0 icon while on page 0 screen
             // FIXME: this is for multiDock; attempt to find a better method
             //        (for example, an option to "pass-through" icon clicks)
-            [self sj_clickedIcon:icon];
+            [self sjmp_clickedIcon:icon];
         }
     } else {
         // Regular application icon
-        [self sj_clickedIcon:icon];
+        [self sjmp_clickedIcon:icon];
     }
 }
 
@@ -199,14 +199,14 @@ static void setPageTitlesEnabled(BOOL enabled)
 // NOTE: The following method is for firmware 2.0.x
 static void $SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$(SBIconController *self, SEL sel, BOOL update)
 {
-    [self sj_updateCurrentIconListIndexUpdatingPageIndicator:update];
+    [self sjmp_updateCurrentIconListIndexUpdatingPageIndicator:update];
     setPageTitlesEnabled(showPageTitles);
 }
 
 // NOTE: The following method is for firmware 2.1+
 static void $SBIconController$updateCurrentIconListIndex(SBIconController *self, SEL sel)
 {
-    [self sj_updateCurrentIconListIndex];
+    [self sjmp_updateCurrentIconListIndex];
     setPageTitlesEnabled(showPageTitles);
 }
 
@@ -214,7 +214,7 @@ static void $SBIconController$updateCurrentIconListIndex(SBIconController *self,
 //______________________________________________________________________________
 
 @interface SBApplicationIcon (SpringJumps)
-- (NSString *)sj_displayName;
+- (NSString *)sjmp_displayName;
 @end
 
 static NSString * $SBApplicationIcon$displayName(SBApplicationIcon *self, SEL sel)
@@ -231,7 +231,7 @@ static NSString * $SBApplicationIcon$displayName(SBApplicationIcon *self, SEL se
         }
     }
 
-    return [self sj_displayName];
+    return [self sjmp_displayName];
 }
 
 //______________________________________________________________________________
@@ -244,20 +244,20 @@ extern "C" void SpringJumpsInitialize()
 
     // Setup hooks
     Class $SBIconModel(objc_getClass("SBIconModel"));
-    MSHookMessage($SBIconModel, @selector(init), (IMP) &$SBIconModel$init, "sj_");
-    MSHookMessage($SBIconModel, @selector(dealloc), (IMP) &$SBIconModel$dealloc, "sj_");
+    MSHookMessage($SBIconModel, @selector(init), (IMP) &$SBIconModel$init, "sjmp_");
+    MSHookMessage($SBIconModel, @selector(dealloc), (IMP) &$SBIconModel$dealloc, "sjmp_");
 
     Class $SBIconController(objc_getClass("SBIconController"));
-    MSHookMessage($SBIconController, @selector(clickedIcon:), (IMP) &$SBIconController$clickedIcon$, "sj_");
+    MSHookMessage($SBIconController, @selector(clickedIcon:), (IMP) &$SBIconController$clickedIcon$, "sjmp_");
 
     if (class_getInstanceMethod($SBIconController, @selector(updateCurrentIconListIndex)))
         MSHookMessage($SBIconController, @selector(updateCurrentIconListIndex),
-                (IMP) &$SBIconController$updateCurrentIconListIndex, "sj_");
+                (IMP) &$SBIconController$updateCurrentIconListIndex, "sjmp_");
     else
         MSHookMessage($SBIconController, @selector(updateCurrentIconListIndexUpdatingPageIndicator:),
-                (IMP) &$SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$, "sj_");
+                (IMP) &$SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$, "sjmp_");
 
     Class $SBApplicationIcon(objc_getClass("SBApplicationIcon"));
-    MSHookMessage($SBApplicationIcon, @selector(displayName), (IMP) &$SBApplicationIcon$displayName, "sj_");
+    MSHookMessage($SBApplicationIcon, @selector(displayName), (IMP) &$SBApplicationIcon$displayName, "sjmp_");
 
 }
