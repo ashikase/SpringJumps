@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-06 18:26:13
+ * Last-modified: 2008-12-06 18:43:02
  */
 
 /**
@@ -58,6 +58,78 @@
 
 #import <UIKit/UIView-Animation.h>
 
+#define APP_ID "jp.ashikase.springjumps"
+
+#define MAX_DOCK_ICONS 5
+#define MAX_PAGES 9
+
+static SBIconModel *iconModel = nil;
+
+static BOOL showPageTitles = YES;
+static BOOL shortcutStates[MAX_PAGES] = {nil};
+static NSString *shortcutNames[MAX_PAGES] = {nil};
+
+//______________________________________________________________________________
+//______________________________________________________________________________
+
+static void loadPreferences()
+{
+    // NOTE: It appears that preferences are cached; must sync to refresh
+    CFPreferencesAppSynchronize(CFSTR(APP_ID));
+
+    Boolean valid;
+    Boolean flag = CFPreferencesGetAppBooleanValue(CFSTR("showPageTitles"), CFSTR(APP_ID), &valid);
+    if (valid)
+        showPageTitles = flag;
+
+    CFPropertyListRef array = CFPreferencesCopyAppValue(CFSTR("shortcuts"), CFSTR(APP_ID));
+    if (array) {
+        for (int i = 0; i < MAX_PAGES; i++) {
+            NSDictionary *dict = [(NSArray *)array objectAtIndex:i];
+            if (dict) {
+                id obj = [dict objectForKey:@"enabled"];
+                if ([obj isKindOfClass:[NSNumber class]])
+                    shortcutStates[i] = [obj boolValue];
+                obj = [dict objectForKey:@"name"];
+                if ([obj isKindOfClass:[NSString class]])
+                    shortcutNames[i] = [obj copy];
+            }
+        }
+
+        CFRelease(array);
+    }
+}
+
+//______________________________________________________________________________
+//______________________________________________________________________________
+
+@interface SBIconModel (SpringJumps)
+- (id)sj_init;
+@end
+
+static id $SBIconModel$init(SBIconModel *self, SEL sel)
+{
+    loadPreferences();
+    self = [self sj_init];
+    if (self) {
+        // NOTE: In case the preferences file is missing or corrupt, take
+        //       shorcut names from the shorcut folders' Info.plist files
+        for (int i = 0; i < MAX_PAGES; i++) {
+            if (shortcutNames[i] == nil) {
+                // Take name from Info.plist file
+                SBIcon *icon = [self iconForDisplayIdentifier:
+                    [NSString stringWithFormat:@APP_ID".%d", i]];
+                if (icon)
+                    shortcutNames[i] = [[icon displayName] copy];
+            }
+        }
+    }
+    return self;
+}
+
+//______________________________________________________________________________
+//______________________________________________________________________________
+
 @interface SBIconController (SpringJumps)
 - (id)sj_init;
 - (void)sj_dealloc;
@@ -65,16 +137,6 @@
 - (void)sj_updateCurrentIconListIndexUpdatingPageIndicator:(BOOL)update;
 - (void)sj_updateCurrentIconListIndex;
 @end
-
-#define MAX_DOCK_ICONS 5
-#define MAX_PAGES 9
-#define SHORTCUT_PREFIX "jp.ashikase.springjumps"
-
-
-static SBIconModel *iconModel = nil;
-
-static BOOL showPageTitles = YES;
-static NSString *shortcutNames[MAX_PAGES] = {nil};
 
 static id $SBIconController$init(SBIconController *self, SEL sel)
 {
@@ -86,7 +148,7 @@ static id $SBIconController$init(SBIconController *self, SEL sel)
         // Load and cache page names
         for (int i = 0; i < MAX_PAGES; i++) {
             SBIcon *icon = [iconModel iconForDisplayIdentifier:
-                [NSString stringWithFormat:@SHORTCUT_PREFIX".%d", i]];
+                [NSString stringWithFormat:@APP_ID".%d", i]];
             if (icon)
                 shortcutNames[i] = [[icon displayName] copy];
         }
@@ -104,8 +166,8 @@ static void $SBIconController$dealloc(SBIconController *self, SEL sel)
 static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIcon *icon)
 {
     NSString *ident = [icon displayIdentifier];
-    if ([ident hasPrefix:@SHORTCUT_PREFIX]) {
-        // Use identifier with format: SHORTCUT_PREFIX.pagenumber
+    if ([ident hasPrefix:@APP_ID]) {
+        // Use identifier with format: APP_ID.pagenumber
         // (e.g. jp.ashikase.springjumps.2)
         NSArray *parts = [ident componentsSeparatedByString:@"."];
         if ([parts count] != 4)
@@ -199,6 +261,10 @@ extern "C" void SpringJumpsInitialize()
         return;
 
     // Setup hooks
+
+    Class $SBIconModel(objc_getClass("SBIconModel"));
+    MSHookMessage($SBIconModel, @selector(init), (IMP) &$SBIconModel$init, "sj_");
+
     Class $SBIconController(objc_getClass("SBIconController"));
     MSHookMessage($SBIconController, @selector(init), (IMP) &$SBIconController$init, "sj_");
     MSHookMessage($SBIconController, @selector(dealloc), (IMP) &$SBIconController$dealloc, "sj_");
