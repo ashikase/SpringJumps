@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-06 18:43:02
+ * Last-modified: 2008-12-06 18:47:33
  */
 
 /**
@@ -63,7 +63,6 @@
 #define MAX_DOCK_ICONS 5
 #define MAX_PAGES 9
 
-static SBIconModel *iconModel = nil;
 
 static BOOL showPageTitles = YES;
 static BOOL shortcutStates[MAX_PAGES] = {nil};
@@ -105,6 +104,7 @@ static void loadPreferences()
 
 @interface SBIconModel (SpringJumps)
 - (id)sj_init;
+- (void)sj_dealloc;
 @end
 
 static id $SBIconModel$init(SBIconModel *self, SEL sel)
@@ -127,41 +127,21 @@ static id $SBIconModel$init(SBIconModel *self, SEL sel)
     return self;
 }
 
-//______________________________________________________________________________
-//______________________________________________________________________________
-
-@interface SBIconController (SpringJumps)
-- (id)sj_init;
-- (void)sj_dealloc;
-- (void)sj_clickedIcon:(SBIcon *)icon;
-- (void)sj_updateCurrentIconListIndexUpdatingPageIndicator:(BOOL)update;
-- (void)sj_updateCurrentIconListIndex;
-@end
-
-static id $SBIconController$init(SBIconController *self, SEL sel)
-{
-    self = [self sj_init];
-    if (self) {
-        Class $SBIconModel(objc_getClass("SBIconModel"));
-        iconModel = [$SBIconModel sharedInstance];
-
-        // Load and cache page names
-        for (int i = 0; i < MAX_PAGES; i++) {
-            SBIcon *icon = [iconModel iconForDisplayIdentifier:
-                [NSString stringWithFormat:@APP_ID".%d", i]];
-            if (icon)
-                shortcutNames[i] = [[icon displayName] copy];
-        }
-    }
-    return self;
-}
-
-static void $SBIconController$dealloc(SBIconController *self, SEL sel)
+static void $SBIconModel$dealloc(SBIconModel *self, SEL sel)
 {
     for (int i = 0; i < MAX_PAGES; i++)
         [shortcutNames[i] release];
     [self sj_dealloc];
 }
+
+//______________________________________________________________________________
+//______________________________________________________________________________
+
+@interface SBIconController (SpringJumps)
+- (void)sj_clickedIcon:(SBIcon *)icon;
+- (void)sj_updateCurrentIconListIndexUpdatingPageIndicator:(BOOL)update;
+- (void)sj_updateCurrentIconListIndex;
+@end
 
 static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIcon *icon)
 {
@@ -180,6 +160,8 @@ static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIc
         object_getInstanceVariable(self, "_currentIconListIndex",
             reinterpret_cast<void **>(&currentIndex));
 
+        Class $SBIconModel(objc_getClass("SBIconModel"));
+        SBIconModel *iconModel = [$SBIconModel sharedInstance];
         if ((pageNumber != currentIndex) &&
                 (pageNumber < (int)[[iconModel iconLists] count])) {
             // Switch to requested page
@@ -261,13 +243,11 @@ extern "C" void SpringJumpsInitialize()
         return;
 
     // Setup hooks
-
     Class $SBIconModel(objc_getClass("SBIconModel"));
     MSHookMessage($SBIconModel, @selector(init), (IMP) &$SBIconModel$init, "sj_");
+    MSHookMessage($SBIconModel, @selector(dealloc), (IMP) &$SBIconModel$dealloc, "sj_");
 
     Class $SBIconController(objc_getClass("SBIconController"));
-    MSHookMessage($SBIconController, @selector(init), (IMP) &$SBIconController$init, "sj_");
-    MSHookMessage($SBIconController, @selector(dealloc), (IMP) &$SBIconController$dealloc, "sj_");
     MSHookMessage($SBIconController, @selector(clickedIcon:), (IMP) &$SBIconController$clickedIcon$, "sj_");
 
     if (class_getInstanceMethod($SBIconController, @selector(updateCurrentIconListIndex)))
