@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-11-30 08:54:18
+ * Last-modified: 2008-12-06 18:23:02
  */
 
 /**
@@ -73,7 +73,8 @@
 
 static SBIconModel *iconModel = nil;
 
-static NSString *pageNames[MAX_PAGES] = {nil};
+static BOOL showPageTitles = YES;
+static NSString *shortcutNames[MAX_PAGES] = {nil};
 
 static id $SBIconController$init(SBIconController *self, SEL sel)
 {
@@ -87,7 +88,7 @@ static id $SBIconController$init(SBIconController *self, SEL sel)
             SBIcon *icon = [iconModel iconForDisplayIdentifier:
                 [NSString stringWithFormat:@SHORTCUT_PREFIX".%d", i]];
             if (icon)
-                pageNames[i] = [[icon displayName] copy];
+                shortcutNames[i] = [[icon displayName] copy];
         }
     }
     return self;
@@ -96,7 +97,7 @@ static id $SBIconController$init(SBIconController *self, SEL sel)
 static void $SBIconController$dealloc(SBIconController *self, SEL sel)
 {
     for (int i = 0; i < MAX_PAGES; i++)
-        [pageNames[i] release];
+        [shortcutNames[i] release];
     [self sj_dealloc];
 }
 
@@ -133,29 +134,38 @@ static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIc
     }
 }
 
+static void setPageTitlesEnabled(BOOL enabled)
+{
+    Class $SBIconController(objc_getClass("SBIconController"));
+    SBIconController *iconController = [$SBIconController sharedInstance];
+
+    if (iconController) {
+        if (enabled) {
+            // Update page title-bar
+            Ivar ivar = class_getInstanceVariable($SBIconController, "_currentIconListIndex");
+            int *_currentIconListIndex = (int *)((char *)iconController + ivar_getOffset(ivar));
+
+            [iconController setIdleModeText:shortcutNames[*_currentIconListIndex]];
+        } else {
+            [iconController setIdleModeText:nil];
+        }
+    }
+}
+
 // NOTE: The following method is for firmware 2.0.x
 static void $SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$(SBIconController *self, SEL sel, BOOL update)
 {
     [self sj_updateCurrentIconListIndexUpdatingPageIndicator:update];
-
-    // Update page title-bar
-    Ivar ivar = class_getInstanceVariable([self class], "_currentIconListIndex");
-    int *_currentIconListIndex = (int *)((char *)self + ivar_getOffset(ivar));
-
-    [self setIdleModeText:pageNames[*_currentIconListIndex]];
+    setPageTitlesEnabled(showPageTitles);
 }
 
 // NOTE: The following method is for firmware 2.1+
 static void $SBIconController$updateCurrentIconListIndex(SBIconController *self, SEL sel)
 {
     [self sj_updateCurrentIconListIndex];
-
-    // Update page title-bar
-    Ivar ivar = class_getInstanceVariable([self class], "_currentIconListIndex");
-    int *_currentIconListIndex = (int *)((char *)self + ivar_getOffset(ivar));
-
-    [self setIdleModeText:pageNames[*_currentIconListIndex]];
+    setPageTitlesEnabled(showPageTitles);
 }
+
 
 //______________________________________________________________________________
 //______________________________________________________________________________
