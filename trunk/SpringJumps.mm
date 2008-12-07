@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-07 19:24:47
+ * Last-modified: 2008-12-07 21:23:49
  */
 
 /**
@@ -182,21 +182,20 @@ static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIc
     }
 }
 
-static void setPageTitlesEnabled(BOOL enabled)
+static void updatePageTitle()
 {
     Class $SBIconController(objc_getClass("SBIconController"));
     SBIconController *iconController = [$SBIconController sharedInstance];
 
     if (iconController) {
-        if (enabled) {
-            // Update page title-bar
-            Ivar ivar = class_getInstanceVariable($SBIconController, "_currentIconListIndex");
-            int *_currentIconListIndex = (int *)((char *)iconController + ivar_getOffset(ivar));
+        // Update page title-bar
+        Ivar ivar = class_getInstanceVariable($SBIconController, "_currentIconListIndex");
+        int *_currentIconListIndex = (int *)((char *)iconController + ivar_getOffset(ivar));
 
+        if (shortcutStates[*_currentIconListIndex])
             [iconController setIdleModeText:shortcutNames[*_currentIconListIndex]];
-        } else {
+        else
             [iconController setIdleModeText:nil];
-        }
     }
 }
 
@@ -204,14 +203,16 @@ static void setPageTitlesEnabled(BOOL enabled)
 static void $SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$(SBIconController *self, SEL sel, BOOL update)
 {
     [self sjmp_updateCurrentIconListIndexUpdatingPageIndicator:update];
-    setPageTitlesEnabled(showPageTitles);
+    if (showPageTitles)
+        updatePageTitle();
 }
 
 // NOTE: The following method is for firmware 2.1+
 static void $SBIconController$updateCurrentIconListIndex(SBIconController *self, SEL sel)
 {
     [self sjmp_updateCurrentIconListIndex];
-    setPageTitlesEnabled(showPageTitles);
+    if (showPageTitles)
+        updatePageTitle();
 }
 
 //______________________________________________________________________________
