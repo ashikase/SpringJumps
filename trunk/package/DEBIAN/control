@@ -1,8 +1,8 @@
 Package: jp.ashikase.springjumps
 Name: SpringJumps
-Version: svn.r
+Version: svn.r29
 Architecture: iphoneos-arm
-Description: Create shortcuts to SpringBoard pages
+Description: Quickly jump to SpringBoard pages
 Homepage: http://iphone-springjumps.googlecode.com/
 Depiction: http://thebigboss.org/moreinfo/springjumpsDp.php
 Maintainer: BigBoss <bigboss@thebigboss.org>
