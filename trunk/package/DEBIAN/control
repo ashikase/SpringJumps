@@ -1,0 +1,13 @@
+Package: jp.ashikase.springjumps
+Name: SpringJumps
+Version: svn.r
+Architecture: iphoneos-arm
+Description: Create shortcuts to SpringBoard pages
+Homepage: http://iphone-springjumps.googlecode.com/
+Depiction: http://thebigboss.org/moreinfo/springjumpsDp.php
+Maintainer: BigBoss <bigboss@thebigboss.org>
+Author: Lance Fetters (ashikase) <gaizin@gmail.com>
+Section: System
+Depends: mobilesubstrate
+dev: ashikase
+Sponsor: thebigboss.org <http://thebigboss.org>
