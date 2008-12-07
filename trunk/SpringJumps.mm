@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-06 18:57:48
+ * Last-modified: 2008-12-07 19:24:47
  */
 
 /**
@@ -43,20 +43,18 @@
 
 #include <substrate.h>
 
-#import <CoreGraphics/CGGeometry.h>
+#import <CoreFoundation/CFPreferences.h>
 
 #import <Foundation/NSArray.h>
 #import <Foundation/NSDictionary.h>
 #import <Foundation/NSString.h>
-#import <Foundation/NSUserDefaults.h>
 
+#import <SpringBoard/SBApplication.h>
 #import <SpringBoard/SBApplicationIcon.h>
 #import <SpringBoard/SBIcon.h>
 #import <SpringBoard/SBIconController.h>
 #import <SpringBoard/SBIconList.h>
 #import <SpringBoard/SBIconModel.h>
-
-#import <UIKit/UIView-Animation.h>
 
 #define APP_ID "jp.ashikase.springjumps"
 
@@ -112,14 +110,20 @@ static id $SBIconModel$init(SBIconModel *self, SEL sel)
     loadPreferences();
     self = [self sjmp_init];
     if (self) {
-        // NOTE: In case the preferences file is missing or corrupt, take
-        //       shorcut names from the shorcut folders' Info.plist files
         for (int i = 0; i < MAX_PAGES; i++) {
-            if (shortcutNames[i] == nil) {
-                // Take name from Info.plist file
-                SBIcon *icon = [self iconForDisplayIdentifier:
-                    [NSString stringWithFormat:@APP_ID".%d", i]];
-                if (icon)
+            SBApplicationIcon *icon = [self iconForDisplayIdentifier:
+                [NSString stringWithFormat:@APP_ID".%d", i]];
+            if (icon) {
+                // If shortcut is disabled, hide the icon
+                if (shortcutStates[i] == NO) {
+                    NSMutableArray *tags = [NSMutableArray arrayWithArray:[[icon application] tags]];
+                    [tags addObject:@"hidden"];
+                    [[icon application] setTags:tags];
+                }
+
+                // NOTE: In case the preferences file is missing or corrupt, take
+                //       shorcut names from the shorcut folders' Info.plist files
+                if (shortcutNames[i] == nil)
                     shortcutNames[i] = [[icon displayName] copy];
             }
         }
