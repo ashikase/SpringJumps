@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-07 21:43:18
+ * Last-modified: 2008-12-07 22:46:22
  */
 
 /**
@@ -173,11 +173,6 @@ static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIc
                 (pageNumber < (int)[[iconModel iconLists] count])) {
             // Switch to requested page
             [self scrollToIconListAtIndex:pageNumber animate:NO];
-        } else if (pageNumber == 0) {
-            // Tapped page 0 icon while on page 0 screen
-            // FIXME: this is for multiDock; attempt to find a better method
-            //        (for example, an option to "pass-through" icon clicks)
-            [self sjmp_clickedIcon:icon];
         }
     } else {
         // Regular application icon
