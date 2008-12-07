@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-07 21:23:49
+ * Last-modified: 2008-12-07 21:43:18
  */
 
 /**
@@ -63,7 +63,7 @@
 
 
 static BOOL showPageTitles = YES;
-static BOOL shortcutStates[MAX_PAGES] = {nil};
+static BOOL shortcutStates[MAX_PAGES];
 static NSString *shortcutNames[MAX_PAGES] = {nil};
 
 //______________________________________________________________________________
@@ -71,9 +71,12 @@ static NSString *shortcutNames[MAX_PAGES] = {nil};
 
 static void loadPreferences()
 {
-    // NOTE: It appears that preferences are cached; must sync to refresh
-    CFPreferencesAppSynchronize(CFSTR(APP_ID));
+    // Register default values
+    // NOTE: This is only necessary for the shortcut enabled states
+    for (int i = 0; i < MAX_PAGES; i++)
+        shortcutStates[i] = YES;
 
+    // Load preferences from preferences file (if it exists)
     Boolean valid;
     Boolean flag = CFPreferencesGetAppBooleanValue(CFSTR("showPageTitles"), CFSTR(APP_ID), &valid);
     if (valid)
