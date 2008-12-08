@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-07 21:29:41
+ * Last-modified: 2008-12-08 15:49:21
  */
 
 /**
@@ -239,7 +239,6 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSLog(@"SpringJumps: you tapped my row");
     switch (indexPath.section) {
         case 1:
             // Shortcuts
@@ -253,10 +252,12 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
                     selectedShortcut = indexPath.row;
 
                     // Show popup to change shortcut title
-                    NSString *title = [NSString stringWithFormat:@"Shortcut %d", selectedShortcut];
-                    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:title message:nil
-                        delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK", nil];
+                    NSString *title = [NSString stringWithFormat:@"Shortcut for Page %d", selectedShortcut];
+                    UIAlertView *alert = [[[UIAlertView alloc] initWithTitle:title message:nil
+                        delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK", nil]
+                        autorelease];
                     [alert addTextFieldWithValue:[cell text] label:@"<Enter shortcut name>"];
+                    [[alert textField] setDelegate:self];
                     [[alert textField] setClearButtonMode:1]; // UITextFieldViewModeWhileEditing
                     [[alert textField] setAutocorrectionType:1]; // UITextAutocorrectionTypeNo
                     [alert show];
@@ -293,6 +294,16 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
         ShortcutConfig *config = [Preferences configForShortcut:selectedShortcut];
         [config setName:[[alertView textField] text]];
     }
+}
+
+// NOTE: The following method allows the use of the return key to select "OK"
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    UIAlertView *alert = (UIAlertView *)[textField superview];
+	[self alertView:alert clickedButtonAtIndex:1];
+	[alert dismissWithClickedButtonIndex:1 animated:NO];
+
+	return NO;
 }
 
 #pragma mark - Switch delegate
