@@ -1,0 +1,47 @@
+#summary Documentation for the SpringJumps extension.
+
+= Introduction =
+
+SpringJumps is a Mobile Substrate-based extension to iPhone/iPod Touch's SpringBoard application launcher that uses special icons to allow a user to quickly jump to any one of SpringBoard's icon pages.
+
+= Usage =
+
+The SpringJumps package (available via Cydia) includes nine shortcut icons, one for each of SpringBoards available pages. Simply tap on an icon to jump to the associated page. Note that it is not possible to jump to a page that does not yet exist.
+
+= Customization =
+
+The SpringJumps package includes a preferences application that allows for the following customizations:
+
+  * Show page titles
+  If this is enabled, every page for which a shortcut exists will display a title at the top, above the icons and below the status bar. The title text will be the same as the name of the shortcut for that page.
+
+  * Enable/disable shortcuts
+  In the list of shortcuts, setting a given shortcut's toggle switch to "OFF" will cause that icon to be hidden from SpringBoard. This is useful for people who do not wish to use all of the available shortcuts.
+
+  * Change shortcut names
+ In the list of shortcuts, tapping on a shortcut's name will display a popup, within which will be a textfield where a new shortcut name can be entered.
+
+Other customization:
+
+  * Change shortcut icons
+  For reasons of simplicity, it was decided not to include icon customization in the preferences application. Instead, it is suggested that one use WinterBoard to create a theme for customizing the shortcut icons.
+
+  To make a theme for WinterBoard create a directory in WinterBoard's theme path (e.g. /Library/Themes/MySpringJumpsTheme). Under that, create a directory for each shortcut that is to be themed; the names of the directories should be "jp.ashikase.springjumps.x", where ".x" should be replaced with the shortcut page number (e.g. jp.ashikase.springjumps.0). In each directory, place the PNG file that is to be used for the icon, making sure to name the file "Icon.png".
+
+ The theme should then be selectable in the WinterBoard application.
+
+= Questions & Issue Reporting =
+
+Please first take a look at the [FAQ Frequently Asked Questions (FAQ)] page.
+
+All problems should be reported via the [http://code.google.com/p/iphone-springjumps/issues/list|Issues tracker]. Please provide as much information about the problem as possible, including device type, firmware version, and steps to take to recreate the problem.
+
+= Donations =
+
+I do not personally accept donations, but if you appreciate my work and feel like making a contribution, please consider donating to [http://www.saurik.com Jay Freeman (saurik)], the creator/maintainer of Cydia and Mobile Substrate (without which SpringJumps would not exist).
+
+= Acknowledgements =
+
+  * saurik, for Mobile Substrate and many things iPhone.
+  * BigBoss, for hosting the SpringJumps package.
+  * WiFone, for suggesting the name "SpringJumps".
