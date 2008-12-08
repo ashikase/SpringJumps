@@ -1,4 +1,4 @@
-EXE = SpringJumps
+EXE = SpringJumpsPrefs
 VERSION = 1.0
 
 CODESIGN = /opt/iPhone/ldid -S
