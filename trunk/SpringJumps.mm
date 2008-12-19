@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-20 07:33:40
+ * Last-modified: 2008-12-20 07:58:05
  */
 
 /**
@@ -183,24 +183,22 @@ static void updatePageTitle()
     SBIconController *iconController = [$SBIconController sharedInstance];
 
     if (iconController) {
-        Ivar ivar = class_getInstanceVariable($SBIconController, "_currentColumnIndex");
-        int *_currentColumnIndex = (int *)((char *)iconController + ivar_getOffset(ivar));
+        // NOTE: The column index denotes which column of icons is currently
+        //       furthest to the left of the screen
+        int _currentColumnIndex = MSHookIvar<int>(iconController, "_currentColumnIndex");
 
-        if (*_currentColumnIndex == 0) {
-            // NOTE: The column index denotes which column of icons is currently
-            //       furthest to the left of the screen
-            ivar = class_getInstanceVariable($SBIconController, "_currentIconListIndex");
-            int *_currentIconListIndex = (int *)((char *)iconController + ivar_getOffset(ivar));
+        if (_currentColumnIndex == 0) {
+            int _currentIconListIndex = MSHookIvar<int>(iconController, "_currentIconListIndex");
 
-            if (currentPage != *_currentIconListIndex) {
+            if (currentPage != _currentIconListIndex) {
                 // Update page title-bar
-                if (shortcutStates[*_currentIconListIndex])
-                    [iconController setIdleModeText:shortcutNames[*_currentIconListIndex]];
+                if (shortcutStates[_currentIconListIndex])
+                    [iconController setIdleModeText:shortcutNames[_currentIconListIndex]];
                 else
                     [iconController setIdleModeText:nil];
 
                 // Store the current page index
-                currentPage = *_currentIconListIndex;
+                currentPage = _currentIconListIndex;
             }
         }
     }
