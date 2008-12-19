@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-20 00:35:25
+ * Last-modified: 2008-12-20 07:33:40
  */
 
 /**
@@ -60,6 +60,12 @@
 
 #define MAX_PAGES 9
 
+#define HOOK(class, name, type, args...) \
+    static type (*_ ## class ## $ ## name)(class *self, SEL sel, ## args); \
+    static type $ ## class ## $ ## name(class *self, SEL sel, ## args)
+
+#define CALL_ORIG(class, name, args...) \
+    _ ## class ## $ ## name(self, sel, ## args)
 
 static BOOL showPageTitles = YES;
 static BOOL shortcutStates[MAX_PAGES];
@@ -105,11 +111,10 @@ static void loadPreferences()
 //______________________________________________________________________________
 //______________________________________________________________________________
 
-static IMP _SBIconModel$init = nil;
-static id $SBIconModel$init(SBIconModel *self, SEL sel)
+HOOK(SBIconModel, init, id)
 {
     loadPreferences();
-    self = _SBIconModel$init(self, sel);
+    self = CALL_ORIG(SBIconModel, init);
     if (self) {
         for (int i = 0; i < MAX_PAGES; i++) {
             SBApplicationIcon *icon = [self iconForDisplayIdentifier:
@@ -132,19 +137,17 @@ static id $SBIconModel$init(SBIconModel *self, SEL sel)
     return self;
 }
 
-static IMP _SBIconModel$dealloc = nil;
-static void $SBIconModel$dealloc(SBIconModel *self, SEL sel)
+HOOK(SBIconModel, dealloc, void)
 {
     for (int i = 0; i < MAX_PAGES; i++)
         [shortcutNames[i] release];
-    _SBIconModel$dealloc(self, sel);
+    CALL_ORIG(SBIconModel, dealloc);
 }
 
 //______________________________________________________________________________
 //______________________________________________________________________________
 
-static IMP _SBIconController$clickedIcon$ = nil;
-static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIcon *icon)
+HOOK(SBIconController, clickedIcon$, void, SBIcon *icon)
 {
     NSString *ident = [icon displayIdentifier];
     if ([ident hasPrefix:@APP_ID]) {
@@ -170,7 +173,7 @@ static void $SBIconController$clickedIcon$(SBIconController *self, SEL sel, SBIc
         }
     } else {
         // Regular application icon
-        _SBIconController$clickedIcon$(self, sel, icon);
+        CALL_ORIG(SBIconController, clickedIcon$, icon);
     }
 }
 
@@ -204,19 +207,17 @@ static void updatePageTitle()
 }
 
 // NOTE: The following method is for firmware 2.0.x
-static IMP _SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$ = nil;
-static void $SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$(SBIconController *self, SEL sel, BOOL update)
+HOOK(SBIconController, updateCurrentIconListIndexUpdatingPageIndicator$, void, BOOL update)
 {
-    _SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$(self, sel, update);
+    CALL_ORIG(SBIconController, updateCurrentIconListIndexUpdatingPageIndicator$, update);
     if (showPageTitles)
         updatePageTitle();
 }
 
 // NOTE: The following method is for firmware 2.1+
-static IMP _SBIconController$updateCurrentIconListIndex = nil;
-static void $SBIconController$updateCurrentIconListIndex(SBIconController *self, SEL sel)
+HOOK(SBIconController, updateCurrentIconListIndex, void)
 {
-    _SBIconController$updateCurrentIconListIndex(self, sel);
+    CALL_ORIG(SBIconController, updateCurrentIconListIndex);
     if (showPageTitles)
         updatePageTitle();
 }
@@ -224,8 +225,7 @@ static void $SBIconController$updateCurrentIconListIndex(SBIconController *self,
 //______________________________________________________________________________
 //______________________________________________________________________________
 
-static IMP _SBApplicationIcon$displayName = nil;
-static NSString * $SBApplicationIcon$displayName(SBApplicationIcon *self, SEL sel)
+HOOK(SBApplicationIcon, displayName, NSString *)
 {
     NSString *ident = [self displayIdentifier];
     if ([ident hasPrefix:@APP_ID]) {
@@ -239,7 +239,7 @@ static NSString * $SBApplicationIcon$displayName(SBApplicationIcon *self, SEL se
         }
     }
 
-    return _SBApplicationIcon$displayName(self, sel);
+    return CALL_ORIG(SBApplicationIcon, displayName);
 }
 
 //______________________________________________________________________________
@@ -253,25 +253,25 @@ extern "C" void SpringJumpsInitialize()
     // Setup hooks
     Class $SBIconModel(objc_getClass("SBIconModel"));
     _SBIconModel$init =
-        MSHookMessage($SBIconModel, @selector(init), (IMP) &$SBIconModel$init, NULL);
+        MSHookMessage($SBIconModel, @selector(init), &$SBIconModel$init);
     _SBIconModel$dealloc =
-        MSHookMessage($SBIconModel, @selector(dealloc), (IMP) &$SBIconModel$dealloc, NULL);
+        MSHookMessage($SBIconModel, @selector(dealloc), &$SBIconModel$dealloc);
 
     Class $SBIconController(objc_getClass("SBIconController"));
     _SBIconController$clickedIcon$ =
-        MSHookMessage($SBIconController, @selector(clickedIcon:), (IMP) &$SBIconController$clickedIcon$, NULL);
+        MSHookMessage($SBIconController, @selector(clickedIcon:), &$SBIconController$clickedIcon$);
 
     if (class_getInstanceMethod($SBIconController, @selector(updateCurrentIconListIndex)))
         _SBIconController$updateCurrentIconListIndex = 
             MSHookMessage($SBIconController, @selector(updateCurrentIconListIndex),
-                    (IMP) &$SBIconController$updateCurrentIconListIndex, NULL);
+                    &$SBIconController$updateCurrentIconListIndex);
     else
         _SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$ = 
             MSHookMessage($SBIconController, @selector(updateCurrentIconListIndexUpdatingPageIndicator:),
-                    (IMP) &$SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$, NULL);
+                &$SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$);
 
     Class $SBApplicationIcon(objc_getClass("SBApplicationIcon"));
     _SBApplicationIcon$displayName =
-        MSHookMessage($SBApplicationIcon, @selector(displayName), (IMP) &$SBApplicationIcon$displayName, NULL);
+        MSHookMessage($SBApplicationIcon, @selector(displayName), &$SBApplicationIcon$displayName);
 
 }
