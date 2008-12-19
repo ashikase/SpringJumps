@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-19 23:29:17
+ * Last-modified: 2008-12-19 23:39:44
  */
 
 /**
@@ -58,7 +58,6 @@
 
 #define APP_ID "jp.ashikase.springjumps"
 
-#define MAX_DOCK_ICONS 5
 #define MAX_PAGES 9
 
 
