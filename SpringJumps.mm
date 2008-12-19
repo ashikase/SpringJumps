@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-07 22:46:22
+ * Last-modified: 2008-12-19 23:29:17
  */
 
 /**
@@ -65,6 +65,9 @@
 static BOOL showPageTitles = YES;
 static BOOL shortcutStates[MAX_PAGES];
 static NSString *shortcutNames[MAX_PAGES] = {nil};
+
+// NOTE: This variable is used to prevent multiple title updates on page scroll
+static int currentPage = 0;
 
 //______________________________________________________________________________
 //______________________________________________________________________________
@@ -186,14 +189,26 @@ static void updatePageTitle()
     SBIconController *iconController = [$SBIconController sharedInstance];
 
     if (iconController) {
-        // Update page title-bar
-        Ivar ivar = class_getInstanceVariable($SBIconController, "_currentIconListIndex");
-        int *_currentIconListIndex = (int *)((char *)iconController + ivar_getOffset(ivar));
+        Ivar ivar = class_getInstanceVariable($SBIconController, "_currentColumnIndex");
+        int *_currentColumnIndex = (int *)((char *)iconController + ivar_getOffset(ivar));
 
-        if (shortcutStates[*_currentIconListIndex])
-            [iconController setIdleModeText:shortcutNames[*_currentIconListIndex]];
-        else
-            [iconController setIdleModeText:nil];
+        if (*_currentColumnIndex == 0) {
+            // NOTE: The column index denotes which column of icons is currently
+            //       furthest to the left of the screen
+            ivar = class_getInstanceVariable($SBIconController, "_currentIconListIndex");
+            int *_currentIconListIndex = (int *)((char *)iconController + ivar_getOffset(ivar));
+
+            if (currentPage != *_currentIconListIndex) {
+                // Update page title-bar
+                if (shortcutStates[*_currentIconListIndex])
+                    [iconController setIdleModeText:shortcutNames[*_currentIconListIndex]];
+                else
+                    [iconController setIdleModeText:nil];
+
+                // Store the current page index
+                currentPage = *_currentIconListIndex;
+            }
+        }
     }
 }
 
