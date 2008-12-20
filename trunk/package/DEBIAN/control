@@ -1,13 +1,13 @@
 Package: jp.ashikase.springjumps
 Name: SpringJumps
-Version: svn.r29
+Version: svn.r48
 Architecture: iphoneos-arm
-Description: Quickly jump to SpringBoard pages
+Description: Quickly jump to different SpringBoard pages
 Homepage: http://iphone-springjumps.googlecode.com/
 Depiction: http://thebigboss.org/moreinfo/springjumpsDp.php
 Maintainer: BigBoss <bigboss@thebigboss.org>
 Author: Lance Fetters (ashikase) <gaizin@gmail.com>
 Section: System
-Depends: mobilesubstrate
+Depends: mobilesubstrate (>= 0.9.2660-1)
 dev: ashikase
 Sponsor: thebigboss.org <http://thebigboss.org>
