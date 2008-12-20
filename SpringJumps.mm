@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-20 07:58:05
+ * Last-modified: 2008-12-20 09:55:02
  */
 
 /**
@@ -46,6 +46,7 @@
 #import <CoreFoundation/CFPreferences.h>
 
 #import <Foundation/NSArray.h>
+#import <Foundation/NSAutoreleasePool.h>
 #import <Foundation/NSDictionary.h>
 #import <Foundation/NSString.h>
 
@@ -248,6 +249,8 @@ extern "C" void SpringJumpsInitialize()
     if (objc_getClass("SpringBoard") == nil)
         return;
 
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
     // Setup hooks
     Class $SBIconModel(objc_getClass("SBIconModel"));
     _SBIconModel$init =
@@ -272,4 +275,5 @@ extern "C" void SpringJumpsInitialize()
     _SBApplicationIcon$displayName =
         MSHookMessage($SBApplicationIcon, @selector(displayName), &$SBApplicationIcon$displayName);
 
+    [pool release];
 }
