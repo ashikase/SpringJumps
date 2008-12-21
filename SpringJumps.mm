@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-21 13:15:17
+ * Last-modified: 2008-12-21 13:32:14
  */
 
 /**
@@ -186,9 +186,9 @@ static void updatePageTitle()
     if (iconController) {
         // NOTE: The column index denotes which column of icons is currently
         //       furthest to the left of the screen
-        int _currentColumnIndex = MSHookIvar<int>(iconController, "_currentColumnIndex");
+        int &_currentColumnIndex = MSHookIvar<int>(iconController, "_currentColumnIndex");
 
-        if (_currentColumnIndex == 0) {
+        if (&_currentColumnIndex == NULL || _currentColumnIndex == 0) {
             int _currentIconListIndex = MSHookIvar<int>(iconController, "_currentIconListIndex");
 
             if (currentPage != _currentIconListIndex) {
