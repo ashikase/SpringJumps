@@ -4,7 +4,7 @@ Version: svn.r48
 Architecture: iphoneos-arm
 Description: Quickly jump to different SpringBoard pages
 Homepage: http://iphone-springjumps.googlecode.com/
-Depiction: http://thebigboss.org/moreinfo/springjumpsDp.php
+Depiction: http://moreinfo.thebigboss.org/moreinfo/springjumpsDp.php
 Maintainer: BigBoss <bigboss@thebigboss.org>
 Author: Lance Fetters (ashikase) <gaizin@gmail.com>
 Section: System

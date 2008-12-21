@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-20 10:29:46
+ * Last-modified: 2008-12-21 13:05:12
  */
 
 /**
@@ -156,27 +156,27 @@ HOOK(SBIconController, clickedIcon$, void, SBIcon *icon)
         // Use identifier with format: APP_ID.pagenumber
         // (e.g. jp.ashikase.springjumps.2)
         NSArray *parts = [ident componentsSeparatedByString:@"."];
-        if ([parts count] != 4)
-            // SpringJumps preferences application
-            _SBIconController$clickedIcon$(self, sel, icon);
-        int pageNumber = [[parts objectAtIndex:3] intValue];
+        if ([parts count] == 4) {
+            int pageNumber = [[parts objectAtIndex:3] intValue];
 
-        // Get the current page index
-        int currentIndex;
-        object_getInstanceVariable(self, "_currentIconListIndex",
-            reinterpret_cast<void **>(&currentIndex));
+            // Get the current page index
+            int currentIndex;
+            object_getInstanceVariable(self, "_currentIconListIndex",
+                    reinterpret_cast<void **>(&currentIndex));
 
-        Class $SBIconModel(objc_getClass("SBIconModel"));
-        SBIconModel *iconModel = [$SBIconModel sharedInstance];
-        if ((pageNumber != currentIndex) &&
-                (pageNumber < (int)[[iconModel iconLists] count])) {
-            // Switch to requested page
-            [self scrollToIconListAtIndex:pageNumber animate:NO];
+            Class $SBIconModel(objc_getClass("SBIconModel"));
+            SBIconModel *iconModel = [$SBIconModel sharedInstance];
+            if ((pageNumber != currentIndex) &&
+                    (pageNumber < (int)[[iconModel iconLists] count])) {
+                // Switch to requested page
+                [self scrollToIconListAtIndex:pageNumber animate:NO];
+            }
         }
-    } else {
-        // Regular application icon
-        CALL_ORIG(SBIconController, clickedIcon$, icon);
+        // Fall-through
     }
+
+    // Regular application icon or SpringJumps settings app
+    CALL_ORIG(SBIconController, clickedIcon$, icon);
 }
 
 static void updatePageTitle()
