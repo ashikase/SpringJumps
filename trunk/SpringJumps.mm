@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-21 13:05:12
+ * Last-modified: 2008-12-21 13:13:21
  */
 
 /**
@@ -170,6 +170,7 @@ HOOK(SBIconController, clickedIcon$, void, SBIcon *icon)
                     (pageNumber < (int)[[iconModel iconLists] count])) {
                 // Switch to requested page
                 [self scrollToIconListAtIndex:pageNumber animate:NO];
+                return;
             }
         }
         // Fall-through
