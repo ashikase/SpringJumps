@@ -26,9 +26,13 @@ Other customization:
   * Change shortcut icons
   For reasons of simplicity, it was decided not to include icon customization in the preferences application. Instead, it is suggested that one use WinterBoard to create a theme for customizing the shortcut icons.
 
-  To make a theme for WinterBoard create a directory in WinterBoard's theme path (e.g. /Library/Themes/MySpringJumpsTheme). Under that, create a directory named "Bundles", and under that create a directory for each shortcut that is to be themed; the names of the directories should be "jp.ashikase.springjumps.x", where ".x" should be replaced with the shortcut page number (e.g. jp.ashikase.springjumps.0). In each directory, place the PNG file that is to be used for the icon, making sure to name the file "Icon.png".
+  To make a theme for use with WinterBoard:
+    # Create a directory in WinterBoard's theme path (e.g. /Library/Themes/MySpringJumpsTheme).
+    # Inside the newly-created theme directory, create a directory named "Bundles".
+    # Inside Bundles, create a directory for each shortcut that is to be themed; the names of the directories should be of the form "jp.ashikase.springjumps.<x>", where "<x>" should be replaced with the shortcut page number (e.g. "jp.ashikase.springjumps.0").
+    # In each shortcut directory, place the PNG file that is to be used for the icon, making sure to name the file "Icon.png".
 
- The theme should then be selectable in the WinterBoard application.
+ The theme should then be selectable in the WinterBoard settings application.
 
 = Questions & Issue Reporting =
 
