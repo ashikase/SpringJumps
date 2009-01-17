@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-21 13:42:31
+ * Last-modified: 2009-01-17 20:19:20
  */
 
 /**
@@ -45,11 +45,11 @@
 
 #import <CoreFoundation/CFPreferences.h>
 
-#import <Foundation/NSArray.h>
-#import <Foundation/NSAutoreleasePool.h>
-#import <Foundation/NSBundle.h>
-#import <Foundation/NSDictionary.h>
-#import <Foundation/NSString.h>
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
+
+#import <GraphicsServices/GraphicsServices.h>
+extern "C" GSEventRecord * _GSEventGetGSEventRecord(struct __GSEvent *);
 
 #import <SpringBoard/SBApplication.h>
 #import <SpringBoard/SBApplicationIcon.h>
@@ -57,6 +57,7 @@
 #import <SpringBoard/SBIconController.h>
 #import <SpringBoard/SBIconList.h>
 #import <SpringBoard/SBIconModel.h>
+#import <SpringBoard/SBTouchPageIndicator.h>
 
 #define APP_ID "jp.ashikase.springjumps"
 
@@ -244,6 +245,26 @@ HOOK(SBApplicationIcon, displayName, NSString *)
 //______________________________________________________________________________
 //______________________________________________________________________________
 
+HOOK(SBTouchPageIndicator, mouseUp$, void, struct __GSEvent *event)
+{
+    GSEventRecord *record = _GSEventGetGSEventRecord(event);
+    if (record) {
+        CGRect frame = [self frame];
+        CGSize size = [self sizeForNumberOfPages:[self numberOfPages]];
+        float originX = frame.origin.x + ((frame.size.width - size.width) / 2.0f);
+        if (record->locationInWindow.x >= originX
+                && record->locationInWindow.x < originX + size.width) {
+            NSLog(@"mouseUp: page indicator icons tapped");
+            return;
+        }
+    }
+
+    CALL_ORIG(SBTouchPageIndicator, mouseUp$, event);
+}
+
+//______________________________________________________________________________
+//______________________________________________________________________________
+
 extern "C" void SpringJumpsInitialize()
 {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -276,6 +297,10 @@ extern "C" void SpringJumpsInitialize()
     Class $SBApplicationIcon(objc_getClass("SBApplicationIcon"));
     _SBApplicationIcon$displayName =
         MSHookMessage($SBApplicationIcon, @selector(displayName), &$SBApplicationIcon$displayName);
+
+    Class $SBTouchPageIndicator = objc_getClass("SBTouchPageIndicator");
+    _SBTouchPageIndicator$mouseUp$ =
+        MSHookMessage($SBTouchPageIndicator, @selector(mouseUp:), &$SBTouchPageIndicator$mouseUp$);
 
     [pool release];
 }
