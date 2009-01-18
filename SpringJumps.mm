@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-18 19:54:28
+ * Last-modified: 2009-01-18 22:59:34
  */
 
 /**
@@ -270,7 +270,6 @@ HOOK(SBTouchPageIndicator, mouseUp$, void, struct __GSEvent *event)
             if (jumpDock == nil) {
                 jumpDock = [[SpringJumpsDock alloc] initWithDefaultSize];
                 CGRect frame = [jumpDock frame];
-                NSLog(@"!!!!!!! frame height is: %f", frame.size.height);
                 frame.origin.y = [[UIScreen mainScreen] bounds].size.height - frame.size.height;
                 [jumpDock setFrame:frame];
                 [window addSubview:jumpDock];
@@ -319,6 +318,12 @@ extern "C" void SpringJumpsInitialize()
         MSHookMessage($SBApplicationIcon, @selector(displayName), &$SBApplicationIcon$displayName);
     _SBApplicationIcon$mouseDown$ =
         MSHookMessage($SBApplicationIcon, @selector(mouseDown:), &$SBApplicationIcon$mouseDown$);
+
+    // FIXME: Need to rethink where and when preferences are loaded
+    Boolean valid;
+    Boolean flag = CFPreferencesGetAppBooleanValue(CFSTR("enableJumpDock"), CFSTR(APP_ID), &valid);
+    if (valid)
+        jumpDockIsEnabled = flag;
 
     if (jumpDockIsEnabled) {
         Class $SBTouchPageIndicator = objc_getClass("SBTouchPageIndicator");
