@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-18 19:53:15
+ * Last-modified: 2009-01-18 22:00:38
  */
 
 /**
@@ -52,8 +52,7 @@
 #define MARGIN_HORIZ_ROW_2 17.0f
 #define MARGIN_VERT 10.0f
 
-#define PADDING_LEFT_ROW_1 4.0f
-#define PADDING_LEFT_ROW_2 18.0f
+#define PADDING_LEFT 4.0f
 #define PADDING_TOP 12.0f
 #define PADDING_BOTTOM 4.0f
 
@@ -94,14 +93,29 @@
                 if (icon) {
                     [icon setShowsImages:YES];
                     [icon setAllowJitter:NO];
-                    if (i < 5)
-                        [icon setOrigin:CGPointMake(
-                            PADDING_LEFT_ROW_1 + (i * (iconSize.width + MARGIN_HORIZ_ROW_1)),
-                            PADDING_TOP)];
-                    else
-                        [icon setOrigin:CGPointMake(
-                            PADDING_LEFT_ROW_2 + ((i - 5) * (iconSize.width + MARGIN_HORIZ_ROW_2)),
-                            PADDING_TOP + iconSize.height + MARGIN_VERT)];
+                    float x, y;
+                    if (i == 0) {
+                        // Jump 0
+                        x = ([self frame].size.width - iconSize.width) / 2.0f;
+                        y = ([self frame].size.height - iconSize.height) / 2.0f;
+                    } else if (i < 3) {
+                        // Jump 1 & 2
+                        x = PADDING_LEFT + ((i - 1) * (iconSize.width + MARGIN_HORIZ_ROW_1));
+                        y = PADDING_TOP;
+                    } else if (i < 5) {
+                        // Jump 3 & 4
+                        x = PADDING_LEFT + ((i - 3) * (iconSize.width + MARGIN_HORIZ_ROW_1));
+                        y = PADDING_TOP + iconSize.height + MARGIN_VERT;
+                    } else if (i < 7) {
+                        // Jump 5 & 6
+                        x = PADDING_LEFT + ((i - 2) * (iconSize.width + MARGIN_HORIZ_ROW_1));
+                        y = PADDING_TOP;
+                    } else {
+                        // Jump 7 & 8
+                        x = PADDING_LEFT + ((i - 4) * (iconSize.width + MARGIN_HORIZ_ROW_1));
+                        y = PADDING_TOP + iconSize.height + MARGIN_VERT;
+                    }
+                    [icon setOrigin:CGPointMake(x, y)];
                     [self addSubview:icon];
                 }
             }
