@@ -10,12 +10,14 @@
 
     BOOL firstRun;
     BOOL showPageTitles;
+    BOOL enableJumpDock;
     NSMutableArray *shortcutConfigs;
 }
 
 @property(nonatomic, getter=isModified) BOOL modified;
 @property(nonatomic) BOOL firstRun;
 @property(nonatomic) BOOL showPageTitles;
+@property(nonatomic, getter=jumpDockIsEnabled) BOOL enableJumpDock;
 @property(nonatomic, readonly) NSArray *shortcutConfigs;
 
 + (Preferences *)sharedInstance;
