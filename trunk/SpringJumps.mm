@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-17 20:19:20
+ * Last-modified: 2009-01-18 19:54:28
  */
 
 /**
@@ -41,12 +41,9 @@
  */
 
 
-#include <substrate.h>
+#import "Common.h"
 
 #import <CoreFoundation/CFPreferences.h>
-
-#import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
 
 #import <GraphicsServices/GraphicsServices.h>
 extern "C" GSEventRecord * _GSEventGetGSEventRecord(struct __GSEvent *);
@@ -58,17 +55,10 @@ extern "C" GSEventRecord * _GSEventGetGSEventRecord(struct __GSEvent *);
 #import <SpringBoard/SBIconList.h>
 #import <SpringBoard/SBIconModel.h>
 #import <SpringBoard/SBTouchPageIndicator.h>
+#import <SpringBoard/SBUIController.h>
 
-#define APP_ID "jp.ashikase.springjumps"
+#import "Dock.h"
 
-#define MAX_PAGES 9
-
-#define HOOK(class, name, type, args...) \
-    static type (*_ ## class ## $ ## name)(class *self, SEL sel, ## args); \
-    static type $ ## class ## $ ## name(class *self, SEL sel, ## args)
-
-#define CALL_ORIG(class, name, args...) \
-    _ ## class ## $ ## name(self, sel, ## args)
 
 static BOOL showPageTitles = YES;
 static BOOL shortcutStates[MAX_PAGES];
@@ -76,6 +66,9 @@ static NSString *shortcutNames[MAX_PAGES] = {nil};
 
 // NOTE: This variable is used to prevent multiple title updates on page scroll
 static int currentPage = 0;
+
+static BOOL jumpDockIsEnabled = YES;
+static SpringJumpsDock *jumpDock = nil;
 
 //______________________________________________________________________________
 //______________________________________________________________________________
@@ -124,7 +117,7 @@ HOOK(SBIconModel, init, id)
                 [NSString stringWithFormat:@APP_ID".%d", i]];
             if (icon) {
                 // If shortcut is disabled, hide the icon
-                if (shortcutStates[i] == NO) {
+                if (jumpDockIsEnabled || shortcutStates[i] == NO) {
                     NSMutableArray *tags = [NSMutableArray arrayWithArray:[[icon application] tags]];
                     [tags addObject:@"hidden"];
                     [[icon application] setTags:tags];
@@ -170,6 +163,10 @@ HOOK(SBIconController, clickedIcon$, void, SBIcon *icon)
                 // Switch to requested page
                 [self scrollToIconListAtIndex:pageNumber animate:NO];
             }
+            // If the jump dock is enabled, destroy it
+            [jumpDock removeFromSuperview];
+            [jumpDock release];
+            jumpDock = nil;
             return;
         }
         // Fall-through
@@ -242,6 +239,19 @@ HOOK(SBApplicationIcon, displayName, NSString *)
     return CALL_ORIG(SBApplicationIcon, displayName);
 }
 
+HOOK(SBApplicationIcon, mouseDown$, void, struct __GSEvent *event)
+{
+    CALL_ORIG(SBApplicationIcon, mouseDown$, event);
+    NSString *ident = [self displayIdentifier];
+    if ([ident hasPrefix:@APP_ID]) {
+        NSArray *parts = [ident componentsSeparatedByString:@"."];
+        if ([parts count] == 4) {
+            // Is a shortcut icon; disallow grabbing
+            [self cancelGrabTimer];
+        }
+    }
+}
+
 //______________________________________________________________________________
 //______________________________________________________________________________
 
@@ -254,7 +264,17 @@ HOOK(SBTouchPageIndicator, mouseUp$, void, struct __GSEvent *event)
         float originX = frame.origin.x + ((frame.size.width - size.width) / 2.0f);
         if (record->locationInWindow.x >= originX
                 && record->locationInWindow.x < originX + size.width) {
-            NSLog(@"mouseUp: page indicator icons tapped");
+            Class $SBUIController = objc_getClass("SBUIController");
+            UIWindow *window = [[$SBUIController sharedInstance] window];
+
+            if (jumpDock == nil) {
+                jumpDock = [[SpringJumpsDock alloc] initWithDefaultSize];
+                CGRect frame = [jumpDock frame];
+                NSLog(@"!!!!!!! frame height is: %f", frame.size.height);
+                frame.origin.y = [[UIScreen mainScreen] bounds].size.height - frame.size.height;
+                [jumpDock setFrame:frame];
+                [window addSubview:jumpDock];
+            }
             return;
         }
     }
@@ -297,10 +317,16 @@ extern "C" void SpringJumpsInitialize()
     Class $SBApplicationIcon(objc_getClass("SBApplicationIcon"));
     _SBApplicationIcon$displayName =
         MSHookMessage($SBApplicationIcon, @selector(displayName), &$SBApplicationIcon$displayName);
+    _SBApplicationIcon$mouseDown$ =
+        MSHookMessage($SBApplicationIcon, @selector(mouseDown:), &$SBApplicationIcon$mouseDown$);
 
-    Class $SBTouchPageIndicator = objc_getClass("SBTouchPageIndicator");
-    _SBTouchPageIndicator$mouseUp$ =
-        MSHookMessage($SBTouchPageIndicator, @selector(mouseUp:), &$SBTouchPageIndicator$mouseUp$);
+    if (jumpDockIsEnabled) {
+        Class $SBTouchPageIndicator = objc_getClass("SBTouchPageIndicator");
+        _SBTouchPageIndicator$mouseUp$ =
+            MSHookMessage($SBTouchPageIndicator, @selector(mouseUp:), &$SBTouchPageIndicator$mouseUp$);
+    }
 
     [pool release];
 }
+
+/* vim: set syntax=objcpp sw=4 ts=4 sts=4 expandtab textwidth=80 ff=unix: */

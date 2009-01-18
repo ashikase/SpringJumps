@@ -6,15 +6,17 @@ SUB_PATH=/files/Platforms/iPhone/Projects/Others/saurik/mobilesubstrate
 LDID = /opt/iPhone/ldid
 
 CXX = arm-apple-darwin9-g++
-CXXFLAGS = -ggdb -O2 -Wall -Werror -I$(SUB_PATH) -IPrefsApp 
+CXXFLAGS = -g0 -O2 -Wall -Werror -I$(SUB_PATH) -IPrefsApp
 LDFLAGS = -lobjc \
+		  -multiply_defined suppress \
 		  -framework CoreFoundation \
 		  -framework Foundation \
 		  -framework UIKit \
 		  -F$(SYS_PATH)/System/Library/PrivateFrameworks \
+		  -framework GraphicsServices \
 		  -L$(SUB_PATH) -lsubstrate
 
-SRCS  = SpringJumps.mm
+SRCS  = SpringJumps.mm Dock.mm
 
 all: $(NAME).dylib $(control)
 
