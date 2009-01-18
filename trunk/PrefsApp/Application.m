@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-07 20:58:57
+ * Last-modified: 2009-01-18 22:40:34
  */
 
 /**
@@ -74,18 +74,6 @@
     [window release];
 
     [super dealloc];
-}
-
-- (void)applicationWillSuspend
-{
-    Preferences *prefs = [Preferences sharedInstance];
-    if ([prefs isModified]) {
-        // Write preferences to disk
-        [prefs writeUserDefaults];
-
-        // Kill SpringBoard (will be relaunched automatically)
-        system("/usr/bin/killall SpringBoard");
-    }
 }
 
 @end
