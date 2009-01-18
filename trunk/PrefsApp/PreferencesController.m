@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-08 15:49:21
+ * Last-modified: 2009-01-18 22:32:05
  */
 
 /**
@@ -167,7 +167,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
     switch (section) {
         case 0:
             // General
-            return 1;
+            return 2;
         case 1:
             // Shortcuts
             return MAX_PAGES;
@@ -192,13 +192,20 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
     switch (indexPath.section) {
         case 0:
             // General
-            [cell setText:@"Show page titles"];
             [cell setImage:nil];
             [cell setSelectionStyle:0];
 
             UISwitch *toggle = [[UISwitch alloc] init];
-            [toggle setOn:[[Preferences sharedInstance] showPageTitles]];
-            [toggle addTarget:self action:@selector(switchToggled:) forControlEvents:64];
+            [toggle addTarget:self action:@selector(switchToggled:) forControlEvents:4096]; // ValueChanged
+
+            if (indexPath.row == 0) {
+                [cell setText:@"Page titles"];
+                [toggle setOn:[[Preferences sharedInstance] showPageTitles]];
+            } else {
+                [cell setText:@"Jump dock"];
+                [toggle setOn:[[Preferences sharedInstance] jumpDockIsEnabled]];
+            }
+
             [cell setAccessoryView:toggle];
             [toggle release];
             break;
@@ -218,7 +225,8 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
                 UISwitch *toggle = [[UISwitch alloc] init];
                 [toggle setOn:config.enabled];
-                [toggle addTarget:self action:@selector(switchToggled:) forControlEvents:64];
+                [toggle addTarget:self action:@selector(switchToggled:) forControlEvents:4096]; // ValueChanged
+                [toggle setEnabled:![[Preferences sharedInstance] jumpDockIsEnabled]];
                 [cell setAccessoryType:2];
                 [cell setAccessoryView:toggle];
                 [toggle release];
@@ -312,8 +320,17 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 {
     NSIndexPath *indexPath = [table indexPathForCell:[control superview]];
     if (indexPath.section == 0) {
-        // Toggled show page titles
-        [[Preferences sharedInstance] setShowPageTitles:[control isOn]];
+        if (indexPath.row == 0) {
+            // Toggled show page titles
+            [[Preferences sharedInstance] setShowPageTitles:[control isOn]];
+        } else {
+            // Toggled jump dock
+            [[Preferences sharedInstance] setEnableJumpDock:[control isOn]];
+
+            // Must reload the table data, as the ability to hide shortcuts
+            // is affected by this setting.
+            [table reloadData];
+        }
     } else {
         // Toggled a shortcut
         ShortcutConfig *config = [Preferences configForShortcut:indexPath.row];

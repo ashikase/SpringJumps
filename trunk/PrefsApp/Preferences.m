@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-07 21:04:27
+ * Last-modified: 2009-01-18 21:18:15
  */
 
 /**
@@ -53,6 +53,7 @@
 @synthesize modified;
 @synthesize firstRun;
 @synthesize showPageTitles;
+@synthesize enableJumpDock;
 @synthesize shortcutConfigs;
 
 + (Preferences *)sharedInstance
@@ -97,6 +98,14 @@
     }
 }
 
+- (void)setEnableJumpDock:(BOOL)enable
+{
+    if (enableJumpDock != enable) {
+        enableJumpDock = enable;
+        modified = YES;
+    }
+}
+
 #pragma mark - Other
 
 - (void)registerDefaults
@@ -106,6 +115,7 @@
 
     [dict setObject:[NSNumber numberWithBool:YES] forKey:@"firstRun"];
     [dict setObject:[NSNumber numberWithBool:YES] forKey:@"showPageTitles"];
+    [dict setObject:[NSNumber numberWithBool:NO] forKey:@"enableJumpDock"];
 
     NSMutableArray *array = [NSMutableArray arrayWithCapacity:MAX_PAGES];
     for (int i = 0; i < MAX_PAGES; i++) {
@@ -127,6 +137,7 @@
 
     firstRun = [defaults boolForKey:@"firstRun"];
     showPageTitles = [defaults boolForKey:@"showPageTitles"];
+    enableJumpDock = [defaults boolForKey:@"enableJumpDock"];
 
     NSArray *array = [defaults arrayForKey:@"shortcuts"];
     for (int i = 0; i < MAX_PAGES; i++) {
@@ -142,6 +153,7 @@
 
     [defaults setObject:[NSNumber numberWithBool:firstRun] forKey:@"firstRun"];
     [defaults setObject:[NSNumber numberWithBool:showPageTitles] forKey:@"showPageTitles"];
+    [defaults setObject:[NSNumber numberWithBool:enableJumpDock] forKey:@"enableJumpDock"];
 
     NSMutableArray *array = [NSMutableArray arrayWithCapacity:MAX_PAGES];
     for (int i = 0; i < MAX_PAGES; i++) {
