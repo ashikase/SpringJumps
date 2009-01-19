@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-18 22:00:38
+ * Last-modified: 2009-01-19 14:15:46
  */
 
 /**
@@ -52,7 +52,7 @@
 #define MARGIN_HORIZ_ROW_2 17.0f
 #define MARGIN_VERT 10.0f
 
-#define PADDING_LEFT 4.0f
+#define PADDING_LEFT 5.0f
 #define PADDING_TOP 12.0f
 #define PADDING_BOTTOM 4.0f
 
