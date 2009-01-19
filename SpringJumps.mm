@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-19 20:06:36
+ * Last-modified: 2009-01-19 20:15:55
  */
 
 /**
@@ -312,13 +312,25 @@ HOOK(SBTouchPageIndicator, mouseUp$, void, struct __GSEvent *event)
     }
 }
 
-HOOK(SpringBoard, menuButtonDown$, void, struct __GSEvent *event)
+//______________________________________________________________________________
+//______________________________________________________________________________
+
+HOOK(SpringBoard, lockButtonUp$, void, struct __GSEvent *event)
 {
+    CALL_ORIG(SpringBoard, lockButtonUp$, event);
+
     // If the jump dock is enabled, destroy it
     // NOTE: This code is safe to use even if jump dock is not enabled.
     dismissJumpDock();
+}
 
-    CALL_ORIG(SpringBoard, menuButtonDown$, event);
+HOOK(SpringBoard, menuButtonUp$, void, struct __GSEvent *event)
+{
+    CALL_ORIG(SpringBoard, menuButtonUp$, event);
+
+    // If the jump dock is enabled, destroy it
+    // NOTE: This code is safe to use even if jump dock is not enabled.
+    dismissJumpDock();
 }
 
 //______________________________________________________________________________
@@ -373,8 +385,10 @@ extern "C" void SpringJumpsInitialize()
             MSHookMessage($SBTouchPageIndicator, @selector(mouseUp:), &$SBTouchPageIndicator$mouseUp$);
 
         Class $SpringBoard(objc_getClass("SpringBoard"));
-        _SpringBoard$menuButtonDown$ =
-            MSHookMessage($SpringBoard, @selector(menuButtonDown:), &$SpringBoard$menuButtonDown$);
+        _SpringBoard$lockButtonUp$ =
+            MSHookMessage($SpringBoard, @selector(lockButtonUp:), &$SpringBoard$lockButtonUp$);
+        _SpringBoard$menuButtonUp$ =
+            MSHookMessage($SpringBoard, @selector(menuButtonUp:), &$SpringBoard$menuButtonUp$);
     }
 
     [pool release];
