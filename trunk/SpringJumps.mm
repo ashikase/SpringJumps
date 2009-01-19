@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-18 22:59:34
+ * Last-modified: 2009-01-19 20:06:36
  */
 
 /**
@@ -56,6 +56,7 @@ extern "C" GSEventRecord * _GSEventGetGSEventRecord(struct __GSEvent *);
 #import <SpringBoard/SBIconModel.h>
 #import <SpringBoard/SBTouchPageIndicator.h>
 #import <SpringBoard/SBUIController.h>
+#import <SpringBoard/SpringBoard.h>
 
 #import "Dock.h"
 
@@ -67,11 +68,18 @@ static NSString *shortcutNames[MAX_PAGES] = {nil};
 // NOTE: This variable is used to prevent multiple title updates on page scroll
 static int currentPage = 0;
 
-static BOOL jumpDockIsEnabled = YES;
+static BOOL jumpDockIsEnabled = NO;
 static SpringJumpsDock *jumpDock = nil;
 
 //______________________________________________________________________________
 //______________________________________________________________________________
+
+static void dismissJumpDock()
+{
+    [jumpDock removeFromSuperview];
+    [jumpDock release];
+    jumpDock = nil;
+}
 
 static void loadPreferences()
 {
@@ -145,6 +153,10 @@ HOOK(SBIconModel, dealloc, void)
 
 HOOK(SBIconController, clickedIcon$, void, SBIcon *icon)
 {
+    // If the jump dock is enabled, destroy it
+    // NOTE: This code is safe to use even if jump dock is not enabled.
+    dismissJumpDock();
+
     NSString *ident = [icon displayIdentifier];
     if ([ident hasPrefix:@APP_ID]) {
         // Use identifier with format: APP_ID.pagenumber
@@ -163,10 +175,6 @@ HOOK(SBIconController, clickedIcon$, void, SBIcon *icon)
                 // Switch to requested page
                 [self scrollToIconListAtIndex:pageNumber animate:NO];
             }
-            // If the jump dock is enabled, destroy it
-            [jumpDock removeFromSuperview];
-            [jumpDock release];
-            jumpDock = nil;
             return;
         }
         // Fall-through
@@ -255,7 +263,7 @@ HOOK(SBApplicationIcon, mouseDown$, void, struct __GSEvent *event)
 //______________________________________________________________________________
 //______________________________________________________________________________
 
-HOOK(SBTouchPageIndicator, mouseUp$, void, struct __GSEvent *event)
+HOOK(SBTouchPageIndicator, mouseDown$, void, struct __GSEvent *event)
 {
     GSEventRecord *record = _GSEventGetGSEventRecord(event);
     if (record) {
@@ -265,12 +273,15 @@ HOOK(SBTouchPageIndicator, mouseUp$, void, struct __GSEvent *event)
         if (record->locationInWindow.x >= originX
                 && record->locationInWindow.x < originX + size.width) {
             Class $SBUIController = objc_getClass("SBUIController");
-            UIWindow *window = [[$SBUIController sharedInstance] window];
+            SBUIController *uiCont = [$SBUIController sharedInstance];
+            UIWindow *window = [uiCont window];
+            UIView *dock = MSHookIvar<UIView *>(uiCont, "_buttonBarContainerView");
 
-            if (jumpDock == nil) {
+            if (!jumpDock) {
                 jumpDock = [[SpringJumpsDock alloc] initWithDefaultSize];
                 CGRect frame = [jumpDock frame];
-                frame.origin.y = [[UIScreen mainScreen] bounds].size.height - frame.size.height;
+                frame.origin.y =
+                    [[UIScreen mainScreen] bounds].size.height - [dock frame].size.height - frame.size.height;
                 [jumpDock setFrame:frame];
                 [window addSubview:jumpDock];
             }
@@ -278,7 +289,36 @@ HOOK(SBTouchPageIndicator, mouseUp$, void, struct __GSEvent *event)
         }
     }
 
-    CALL_ORIG(SBTouchPageIndicator, mouseUp$, event);
+    CALL_ORIG(SBTouchPageIndicator, mouseDown$, event);
+}
+
+HOOK(SBTouchPageIndicator, mouseUp$, void, struct __GSEvent *event)
+{
+    if (jumpDock) {
+        // FIXME: Is there a simpler way to do this? (Slide to tap)
+        GSEventRecord *record = _GSEventGetGSEventRecord(event);
+        if (record) {
+            id obj = [jumpDock hitTest:CGPointMake(record->locationInWindow.x,
+                record->locationInWindow.y - [jumpDock frame].origin.y) forEvent:event];
+            Class $SBApplicationIcon(objc_getClass("SBApplicationIcon"));
+            if ([obj isMemberOfClass:$SBApplicationIcon]) {
+                SBApplicationIcon *icon = obj;
+                [icon mouseDown:event];
+                [icon mouseUp:event];
+            }
+        }
+    } else {
+        CALL_ORIG(SBTouchPageIndicator, mouseUp$, event);
+    }
+}
+
+HOOK(SpringBoard, menuButtonDown$, void, struct __GSEvent *event)
+{
+    // If the jump dock is enabled, destroy it
+    // NOTE: This code is safe to use even if jump dock is not enabled.
+    dismissJumpDock();
+
+    CALL_ORIG(SpringBoard, menuButtonDown$, event);
 }
 
 //______________________________________________________________________________
@@ -327,8 +367,14 @@ extern "C" void SpringJumpsInitialize()
 
     if (jumpDockIsEnabled) {
         Class $SBTouchPageIndicator = objc_getClass("SBTouchPageIndicator");
+        _SBTouchPageIndicator$mouseDown$ =
+            MSHookMessage($SBTouchPageIndicator, @selector(mouseDown:), &$SBTouchPageIndicator$mouseDown$);
         _SBTouchPageIndicator$mouseUp$ =
             MSHookMessage($SBTouchPageIndicator, @selector(mouseUp:), &$SBTouchPageIndicator$mouseUp$);
+
+        Class $SpringBoard(objc_getClass("SpringBoard"));
+        _SpringBoard$menuButtonDown$ =
+            MSHookMessage($SpringBoard, @selector(menuButtonDown:), &$SpringBoard$menuButtonDown$);
     }
 
     [pool release];
