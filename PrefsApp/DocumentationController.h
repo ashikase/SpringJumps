@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-22 13:39:12
+ * Last-modified: 2009-01-22 13:37:43
  */
 
 /**
@@ -41,18 +41,22 @@
  */
 
 
-// General
-#define APP_TITLE "SpringJumps"
-#define FIRST_RUN_MSG "WARNING: Any changes made to preferences will cause SpringBoard to restart upon exit."
+#import <UIKit/UIKit.h>
 
-// Documentation
-#define DOC_BUNDLE_PATH "doc"
-#define DOC_CACHE_PATH "/var/mobile/Library/Caches/jp.ashikase.springjumps/doc"
 
-#define DEVSITE_URL "http://iphone-springjumps.googlecode.com"
-#define DOC_URL DEVSITE_URL"svn/trunk/NonMirrored/doc"
+@class NSString;
 
-// SpringJumps-specific
-#define MAX_PAGES 9
+@interface DocumentationController : UIViewController 
+{
+    NSString *fileName;
+    UIWebView *webView;
+}
 
-/* vim: set syntax=objcpp sw=4 ts=4 sts=4 expandtab textwidth=80 ff=unix: */
+- (id)initWithContentsOfFile:(NSString *)fileName title:(NSString *)title;
+
+- (void)loadLocalFile;
+- (void)loadRemoteFile;
+
+@end
+
+/* vim: set syntax=objc sw=4 ts=4 sts=4 expandtab textwidth=80 ff=unix: */
