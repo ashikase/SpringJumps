@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-22 13:12:05
+ * Last-modified: 2009-01-22 16:34:21
  */
 
 /**
@@ -53,6 +53,7 @@
 #import <UIKit/UIViewController-UINavigationControllerItem.h>
 
 #import "Constants.h"
+#import "DocumentationController.h"
 #import "Preferences.h"
 #import "ShortcutConfig.h"
 
@@ -148,11 +149,11 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 {
     switch (section) {
         case 0:
-            return @"General";
+            return @"Documentation";
         case 1:
-            return @"Shortcuts";
+            return @"General";
         case 2:
-            return @"Other";
+            return @"Shortcuts (Tap label to rename)";
         default:
             return nil;
     }
@@ -162,14 +163,14 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 {
     switch (section) {
         case 0:
+            // Documentation
+            return 4;
+        case 1:
             // General
             return 2;
-        case 1:
+        case 2:
             // Shortcuts
             return MAX_PAGES;
-        case 2:
-            // Other
-            return 1;
         default:
             return 0;
     }
@@ -177,22 +178,78 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    static NSString *reuseIdentifier = @"PreferencesCell";
+    static NSString *reuseIdSimple = @"SimpleCell";
+    static NSString *reuseIdSubtext = @"SubtextCell";
+    static NSString *reuseIdToggle = @"ToggleCell";
 
-    // Try to retrieve from the table view a now-unused cell with the given identifier
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:reuseIdentifier];
-    if (cell == nil)
-        // Cell does not exist, create a new one
-        cell = [[[PreferencesCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdentifier] autorelease];
+    UITableViewCell *cell = nil;
+    if (indexPath.section == 0) {
+        // Documentation
+        if (indexPath.row == 3) {
+            // Try to retrieve from the table view a now-unused cell with the given identifier
+            cell = [tableView dequeueReusableCellWithIdentifier:reuseIdSubtext];
+            if (cell == nil) {
+                // Cell does not exist, create a new one
+                cell = [[[PreferencesCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSubtext] autorelease];
+                [cell setSelectionStyle:2]; // Gray
 
-    switch (indexPath.section) {
-        case 0:
-            // General
-            [cell setImage:nil];
+                UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
+                [label setTextColor:[UIColor colorWithRed:0.2f green:0.31f blue:0.52f alpha:1.0f]];
+                [cell setAccessoryView:label];
+                [label release];
+            }
+
+            [cell setText:@"Project Homepage"];
+
+            UILabel *label = [cell accessoryView];
+            NSString *labelText = @"(via Safari)";
+            UIFont *font = [UIFont systemFontOfSize:18.0f];
+            CGSize size = [labelText sizeWithFont:font];
+            [label setFrame:CGRectMake(0, 0, size.width, size.height)];
+            [label setText:labelText];
+            [label setFont:font];
+        } else {
+            // Try to retrieve from the table view a now-unused cell with the given identifier
+            cell = [tableView dequeueReusableCellWithIdentifier:reuseIdSimple];
+            if (cell == nil) {
+                // Cell does not exist, create a new one
+                cell = [[[PreferencesCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSimple] autorelease];
+                [cell setSelectionStyle:2]; // Gray
+                [cell setAccessoryType:1]; // Simple arrow
+            }
+
+            switch (indexPath.row) {
+                case 0:
+                    [cell setText:@"How to Use"];
+                    break;
+                case 1:
+                    [cell setText:@"Release Notes"];
+                    break;
+                case 2:
+                    [cell setText:@"Known Issues"];
+                    break;
+            }
+        }
+    } else {
+        // Try to retrieve from the table view a now-unused cell with the given identifier
+        cell = [tableView dequeueReusableCellWithIdentifier:reuseIdToggle];
+        if (cell == nil) {
+            // Cell does not exist, create a new one
+            cell = [[[PreferencesCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdToggle] autorelease];
             [cell setSelectionStyle:0];
 
             UISwitch *toggle = [[UISwitch alloc] init];
             [toggle addTarget:self action:@selector(switchToggled:) forControlEvents:4096]; // ValueChanged
+            [cell setAccessoryType:2];
+            [cell setAccessoryView:toggle];
+            [toggle release];
+        }
+
+        UISwitch *toggle = [cell accessoryView];
+        if (indexPath.section == 1) {
+            // General
+            [cell setImage:nil];
+            [toggle setEnabled:YES];
 
             if (indexPath.row == 0) {
                 [cell setText:@"Page titles"];
@@ -201,39 +258,22 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
                 [cell setText:@"Jump dock"];
                 [toggle setOn:[[Preferences sharedInstance] jumpDockIsEnabled]];
             }
-
-            [cell setAccessoryView:toggle];
-            [toggle release];
-            break;
-        case 1:
+        } else {
             // Shortcuts
-            {
-                ShortcutConfig *config = [Preferences configForShortcut:indexPath.row];
-                [cell setText:config.name];
+            ShortcutConfig *config = [Preferences configForShortcut:indexPath.row];
+            [cell setText:config.name];
 
-                NSString *identifier = [NSString stringWithFormat:@"%s.%d", "jp.ashikase.springjumps", indexPath.row];
-                NSString *iconPath = SBSCopyIconImagePathForDisplayIdentifier(identifier);
-                if (iconPath != nil) {
-                    UIImage *icon = [UIImage imageWithContentsOfFile:iconPath];
-                    icon = [icon _imageScaledToSize:CGSizeMake(35, 36) interpolationQuality:0];
-                    [cell setImage:icon];
-                }
-
-                UISwitch *toggle = [[UISwitch alloc] init];
-                [toggle setOn:config.enabled];
-                [toggle addTarget:self action:@selector(switchToggled:) forControlEvents:4096]; // ValueChanged
-                [toggle setEnabled:![[Preferences sharedInstance] jumpDockIsEnabled]];
-                [cell setAccessoryType:2];
-                [cell setAccessoryView:toggle];
-                [toggle release];
+            NSString *identifier = [NSString stringWithFormat:@"%s.%d", "jp.ashikase.springjumps", indexPath.row];
+            NSString *iconPath = SBSCopyIconImagePathForDisplayIdentifier(identifier);
+            if (iconPath != nil) {
+                UIImage *icon = [UIImage imageWithContentsOfFile:iconPath];
+                icon = [icon _imageScaledToSize:CGSizeMake(35, 36) interpolationQuality:0];
+                [cell setImage:icon];
             }
-            break;
-        case 2:
-            // Other
-            [cell setText:@"Visit the project homepage"];
-            [cell setImage:nil];
-            [cell setAccessoryView:nil];
-            break;
+
+            [toggle setOn:config.enabled];
+            [toggle setEnabled:![[Preferences sharedInstance] jumpDockIsEnabled]];
+        }
     }
 
     return cell;
@@ -244,7 +284,40 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     switch (indexPath.section) {
-        case 1:
+        case 0:
+            {
+                // Documentation
+                NSString *fileName = nil;
+                NSString *title = nil;
+
+                switch (indexPath.section) {
+                    case 0:
+                        {
+                            switch (indexPath.row) {
+                                case 0:
+                                    fileName = @"usage.html";
+                                    title = @"How to Use";
+                                    break;
+                                case 1:
+                                    fileName = @"release_notes.html";
+                                    title = @"Release Notes";
+                                    break;
+                                case 2:
+                                    fileName = @"known_issues.html";
+                                    title = @"Known Issues";
+                                    break;
+                                case 3:
+                                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@DEVSITE_URL]];
+                                    break;
+                            }
+                            if (fileName && title)
+                                [[self navigationController] pushViewController:[[[DocumentationController alloc]
+                                    initWithContentsOfFile:fileName title:title] autorelease] animated:YES];
+                        }
+                }
+            }
+            break;
+        case 2:
             // Shortcuts
             {
                 PreferencesCell *cell = [tableView cellForRowAtIndexPath:indexPath];
@@ -271,14 +344,6 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
                 }
 
             }
-            break;
-        case 2:
-            // Other
-            [[UIApplication sharedApplication] openURL:
-                [NSURL URLWithString:@"http://code.google.com/p/iphone-springjumps/wiki/Documentation"]];
-            break;
-        case 0:
-        default:
             break;
     }
 }
