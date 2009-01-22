@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-22 12:52:36
+ * Last-modified: 2009-01-22 12:45:06
  */
 
 /**
@@ -41,10 +41,15 @@
  */
 
 
-// General
-#define APP_TITLE "SpringJumps"
-#define FIRST_RUN_MSG "WARNING: Any changes made to preferences will cause SpringBoard to restart upon exit."
+#import <UIKit/UIKit.h>
 
-// SpringJumps-specific
-#define MAX_PAGES 9
 
+@interface RootController : UIViewController
+{
+    UITableView *table;
+    unsigned int selectedShortcut;
+}
+
+@end
+
+/* vim: set syntax=objc sw=4 ts=4 sts=4 expandtab textwidth=80 ff=unix: */

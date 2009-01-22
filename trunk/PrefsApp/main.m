@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-02 20:23:39
+ * Last-modified: 2009-01-22 12:54:25
  */
 
 /**
@@ -40,16 +40,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 #import <Foundation/NSAutoreleasePool.h>
 #import <UIKit/UIKit.h>
-
-#import "Application.h"
 
 
 int main(int argc, char **argv)
 {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-    int ret = UIApplicationMain(argc, argv, @"SpringJumpsApplication", @"SpringJumpsApplication");
+    int ret = UIApplicationMain(argc, argv, @"Application", @"Application");
     [pool release];
     return ret;
 }
