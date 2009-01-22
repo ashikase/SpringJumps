@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-18 22:40:55
+ * Last-modified: 2009-01-22 13:12:05
  */
 
 /**
@@ -41,24 +41,15 @@
  */
 
 
-#import "PreferencesController.h"
+#import "RootController.h"
+
+#include <notify.h>
 
 #import <Foundation/NSSet.h>
 
-#import <UIKit/UIAlertView.h>
+#import <UIKit/UIKit.h>
 #import <UIKit/UIAlertView-Private.h>
-#import <UIKit/UIBarButtonItem.h>
-#import <UIKit/UIBezierPath-UIInternal.h>
-#import <UIKit/UIFieldEditor.h>
-#import <UIKit/UIFont.h>
-#import <UIKit/UIOldSliderControl.h>
-#import <UIKit/UIPreferencesControlTableCell.h>
-#import <UIKit/UIPreferencesTextTableCell.h>
-#import <UIKit/UIScreen.h>
-#import <UIKit/UISimpleTableCell.h>
 #import <UIKit/UISwitch.h>
-#import <UIKit/UITextInputTraits-Protocol.h>
-#import <UIKit/UITouch.h>
 #import <UIKit/UIViewController-UINavigationControllerItem.h>
 
 #import "Constants.h"
@@ -66,6 +57,7 @@
 #import "ShortcutConfig.h"
 
 extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier);
+
 
 @interface PreferencesCell : UITableViewCell
 {
@@ -94,17 +86,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 //______________________________________________________________________________
 //______________________________________________________________________________
 
-@interface PreferencesPage : UIViewController
-{
-    UITableView *table;
-    unsigned int selectedShortcut;
-}
-
-@end
-
-//______________________________________________________________________________
-
-@implementation PreferencesPage
+@implementation RootController
 
 - (id)init
 {
@@ -139,6 +121,20 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 {
     // Reset the table by deselecting the current selection
     [table deselectRowAtIndexPath:[table indexPathForSelectedRow] animated:YES];
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+
+    Preferences *prefs = [Preferences sharedInstance];
+    if ([prefs isModified]) {
+        // Write preferences to disk
+        [prefs writeUserDefaults];
+
+        // Respring SpringBoard
+        notify_post("com.apple.language.changed");
+    }
 }
 
 #pragma mark - UITableViewDataSource
@@ -335,55 +331,6 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
         // Toggled a shortcut
         ShortcutConfig *config = [Preferences configForShortcut:indexPath.row];
         [config setEnabled:[control isOn]];
-    }
-}
-
-@end
-
-//______________________________________________________________________________
-//______________________________________________________________________________
-
-@implementation PreferencesController
-
-- (id)init
-{
-    self = [super init];
-    if (self) {
-        Preferences *prefs = [Preferences sharedInstance];
-        [prefs registerDefaults];
-        [prefs readUserDefaults];
-
-        [[self navigationBar] setBarStyle:1];
-        [self pushViewController:
-            [[[PreferencesPage alloc] init] autorelease] animated:NO];
-
-        if ([prefs firstRun]) {
-            // Show a once-only warning
-            UIAlertView *alert = [[[UIAlertView alloc]
-                initWithTitle:@"Welcome to SpringJumps"
-                message:@"WARNING: Any changes made to preferences will cause SpringBoard to be restarted upon exit."
-                delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil] autorelease];
-            [alert show];
-
-            // Save settings so that this warning will not be shown again
-            [prefs setFirstRun:NO];
-            [prefs writeUserDefaults];
-        }
-    }
-    return self;
-}
-
-- (void)viewWillDisappear:(BOOL)animated
-{
-    [super viewWillDisappear:animated];
-
-    Preferences *prefs = [Preferences sharedInstance];
-    if ([prefs isModified]) {
-        // Write preferences to disk
-        [prefs writeUserDefaults];
-
-        // Respring SpringBoard
-        notify_post("com.apple.language.changed");
     }
 }
 

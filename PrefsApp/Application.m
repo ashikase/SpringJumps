@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-18 22:40:34
+ * Last-modified: 2009-01-22 12:56:42
  */
 
 /**
@@ -44,33 +44,48 @@
 #import "Application.h"
 
 #import <UIKit/UIKit.h>
-#import <UIKit/UINavigationController.h>
-#import <UIKit/UIScreen.h>
-#import <UIKit/UIView-Hierarchy.h>
-#import <UIKit/UIViewController.h>
-#import <UIKit/UIWindow.h>
 
-#import "PreferencesController.h"
+#import "Constants.h"
 #import "Preferences.h"
+#import "RootController.h"
 
-@implementation SpringJumpsApplication
 
-@synthesize window;
+@implementation Application
 
 - (void)applicationDidFinishLaunching:(UIApplication *)application
 {
-    // Create our controller
-    prefsController = [[PreferencesController alloc] init];
+    // Create and load in-memory preferences object
+    Preferences *prefs = [Preferences sharedInstance];
+    [prefs registerDefaults];
+    [prefs readUserDefaults];
+
+    if ([prefs firstRun]) {
+        // Show a once-only warning
+        NSString *title = [NSString stringWithFormat:@"Welcome to %@", @APP_TITLE];
+        NSString *message = @FIRST_RUN_MSG;
+        UIAlertView *alert = [[[UIAlertView alloc] initWithTitle:title message:message
+                 delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil] autorelease];
+        [alert show];
+
+        // Save settings so that this warning will not be shown again
+        [prefs setFirstRun:NO];
+        [prefs writeUserDefaults];
+    }
+
+    // Create our navigation controller with the initial view controller
+    navController = [[UINavigationController alloc] initWithRootViewController:
+        [[[RootController alloc] init] autorelease]];;
+    [[navController navigationBar] setBarStyle:1];
 
     // Create and show the application window
     window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]]; 
-    [window addSubview:[prefsController view]];
+    [window addSubview:[navController view]];
     [window makeKeyAndVisible];
 }
 
 - (void)dealloc
 {
-    [prefsController release];
+    [navController release];
     [window release];
 
     [super dealloc];

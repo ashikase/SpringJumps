@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-18 21:18:15
+ * Last-modified: 2009-01-22 13:02:41
  */
 
 /**
@@ -47,6 +47,7 @@
 
 #import "Constants.h"
 #import "ShortcutConfig.h"
+
 
 @implementation Preferences
 
