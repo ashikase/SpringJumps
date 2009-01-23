@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-22 16:34:21
+ * Last-modified: 2009-01-23 23:15:11
  */
 
 /**
@@ -179,7 +179,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     static NSString *reuseIdSimple = @"SimpleCell";
-    static NSString *reuseIdSubtext = @"SubtextCell";
+    static NSString *reuseIdSafari = @"SafariCell";
     static NSString *reuseIdToggle = @"ToggleCell";
 
     UITableViewCell *cell = nil;
@@ -187,27 +187,26 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
         // Documentation
         if (indexPath.row == 3) {
             // Try to retrieve from the table view a now-unused cell with the given identifier
-            cell = [tableView dequeueReusableCellWithIdentifier:reuseIdSubtext];
+            cell = [tableView dequeueReusableCellWithIdentifier:reuseIdSafari];
             if (cell == nil) {
                 // Cell does not exist, create a new one
-                cell = [[[PreferencesCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSubtext] autorelease];
+                cell = [[[PreferencesCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSafari] autorelease];
                 [cell setSelectionStyle:2]; // Gray
 
                 UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
+                NSString *labelText = @"(via Safari)";
+                [label setText:labelText];
                 [label setTextColor:[UIColor colorWithRed:0.2f green:0.31f blue:0.52f alpha:1.0f]];
+                UIFont *font = [UIFont systemFontOfSize:16.0f];
+                [label setFont:font];
+                CGSize size = [labelText sizeWithFont:font];
+                [label setFrame:CGRectMake(0, 0, size.width, size.height)];
+
                 [cell setAccessoryView:label];
                 [label release];
             }
 
             [cell setText:@"Project Homepage"];
-
-            UILabel *label = [cell accessoryView];
-            NSString *labelText = @"(via Safari)";
-            UIFont *font = [UIFont systemFontOfSize:18.0f];
-            CGSize size = [labelText sizeWithFont:font];
-            [label setFrame:CGRectMake(0, 0, size.width, size.height)];
-            [label setText:labelText];
-            [label setFont:font];
         } else {
             // Try to retrieve from the table view a now-unused cell with the given identifier
             cell = [tableView dequeueReusableCellWithIdentifier:reuseIdSimple];
@@ -240,7 +239,6 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
             UISwitch *toggle = [[UISwitch alloc] init];
             [toggle addTarget:self action:@selector(switchToggled:) forControlEvents:4096]; // ValueChanged
-            [cell setAccessoryType:2];
             [cell setAccessoryView:toggle];
             [toggle release];
         }
