@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-23 23:15:11
+ * Last-modified: 2009-01-24 14:29:59
  */
 
 /**
@@ -89,9 +89,9 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
 @implementation RootController
 
-- (id)init
+- (id)initWithStyle:(int)style
 {
-    self = [super initWithNibName:nil bundle:nil];
+    self = [super initWithStyle:style];
     if (self) {
         [self setTitle:@"SpringJumps Prefs"];
         [[self navigationItem] setBackButtonTitle:@"Back"];
@@ -99,35 +99,15 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
     return self;
 }
 
-- (void)loadView
-{
-    table = [[UITableView alloc]
-        initWithFrame:[[UIScreen mainScreen] applicationFrame] style:1];
-    [table setDataSource:self];
-    [table setDelegate:self];
-    [table reloadData];
-    [self setView:table];
-}
-
-- (void)dealloc
-{
-    [table setDataSource:nil];
-    [table setDelegate:nil];
-    [table release];
-
-    [super dealloc];
-}
-
 - (void)viewWillAppear:(BOOL)animated
 {
     // Reset the table by deselecting the current selection
-    [table deselectRowAtIndexPath:[table indexPathForSelectedRow] animated:YES];
+    UITableView *tableView = [self tableView];
+    [tableView deselectRowAtIndexPath:[tableView indexPathForSelectedRow] animated:YES];
 }
 
 - (void)viewWillDisappear:(BOOL)animated
 {
-    [super viewWillDisappear:animated];
-
     Preferences *prefs = [Preferences sharedInstance];
     if ([prefs isModified]) {
         // Write preferences to disk
@@ -190,7 +170,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
             cell = [tableView dequeueReusableCellWithIdentifier:reuseIdSafari];
             if (cell == nil) {
                 // Cell does not exist, create a new one
-                cell = [[[PreferencesCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSafari] autorelease];
+                cell = [[[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSafari] autorelease];
                 [cell setSelectionStyle:2]; // Gray
 
                 UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
@@ -212,7 +192,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
             cell = [tableView dequeueReusableCellWithIdentifier:reuseIdSimple];
             if (cell == nil) {
                 // Cell does not exist, create a new one
-                cell = [[[PreferencesCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSimple] autorelease];
+                cell = [[[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSimple] autorelease];
                 [cell setSelectionStyle:2]; // Gray
                 [cell setAccessoryType:1]; // Simple arrow
             }
@@ -338,7 +318,8 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
                     [alert show];
                 } else {
                     // Reset the table by deselecting the current selection
-                    [table deselectRowAtIndexPath:[table indexPathForSelectedRow] animated:NO];
+                    UITableView *tableView = [self tableView];
+                    [tableView deselectRowAtIndexPath:[tableView indexPathForSelectedRow] animated:NO];
                 }
 
             }
@@ -351,10 +332,11 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(int)index
 {
     // Reset the table by deselecting the current selection
-    [table deselectRowAtIndexPath:[table indexPathForSelectedRow] animated:YES];
+    UITableView *tableView = [self tableView];
+    [tableView deselectRowAtIndexPath:[tableView indexPathForSelectedRow] animated:YES];
 
     if (index == 1) {
-        UITableViewCell *cell = [table cellForRowAtIndexPath:
+        UITableViewCell *cell = [tableView cellForRowAtIndexPath:
             [NSIndexPath indexPathForRow:selectedShortcut inSection:1]];
         [cell setText:[[alertView textField] text]];
 
@@ -377,7 +359,8 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
 - (void)switchToggled:(UISwitch *)control
 {
-    NSIndexPath *indexPath = [table indexPathForCell:[control superview]];
+    UITableView *tableView = [self tableView];
+    NSIndexPath *indexPath = [tableView indexPathForCell:[control superview]];
     if (indexPath.section == 0) {
         if (indexPath.row == 0) {
             // Toggled show page titles
@@ -388,7 +371,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
             // Must reload the table data, as the ability to hide shortcuts
             // is affected by this setting.
-            [table reloadData];
+            [tableView reloadData];
         }
     } else {
         // Toggled a shortcut
