@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-22 12:56:42
+ * Last-modified: 2009-01-23 23:37:10
  */
 
 /**
@@ -74,7 +74,7 @@
 
     // Create our navigation controller with the initial view controller
     navController = [[UINavigationController alloc] initWithRootViewController:
-        [[[RootController alloc] init] autorelease]];;
+        [[[RootController alloc] initWithStyle:1] autorelease]];;
     [[navController navigationBar] setBarStyle:1];
 
     // Create and show the application window
