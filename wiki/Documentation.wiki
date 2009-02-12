@@ -40,10 +40,6 @@ Please first take a look at the [FAQ Frequently Asked Questions (FAQ)] page.
 
 All problems should be reported via the [http://code.google.com/p/iphone-springjumps/issues/list|Issues tracker]. Please provide as much information about the problem as possible, including device type, firmware version, and steps to take to recreate the problem.
 
-= Donations =
-
-I do not personally accept donations, but if you appreciate my work and feel like making a contribution, please consider donating to [http://www.saurik.com Jay Freeman (saurik)], the creator/maintainer of Cydia and Mobile Substrate (without which SpringJumps would not exist).
-
 = Acknowledgements =
 
   * saurik, for Mobile Substrate and many things iPhone.
