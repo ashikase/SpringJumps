@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-19 20:15:55
+ * Last-modified: 2009-04-30 15:26:36
  */
 
 /**
@@ -66,7 +66,7 @@ static BOOL shortcutStates[MAX_PAGES];
 static NSString *shortcutNames[MAX_PAGES] = {nil};
 
 // NOTE: This variable is used to prevent multiple title updates on page scroll
-static int currentPage = 0;
+static int currentPage = -1;
 
 static BOOL jumpDockIsEnabled = NO;
 static SpringJumpsDock *jumpDock = nil;
@@ -184,6 +184,10 @@ HOOK(SBIconController, clickedIcon$, void, SBIcon *icon)
     CALL_ORIG(SBIconController, clickedIcon$, icon);
 }
 
+// NOTE: It would be more efficient to have this function called via
+//       SBTouchPageIndicator::setCurrentPage:(int); however, the page title
+//       would not be updated until scrolling has stopped (and thus titles of
+//       "in-between" pages would not be shown).
 static void updatePageTitle()
 {
     Class $SBIconController(objc_getClass("SBIconController"));
