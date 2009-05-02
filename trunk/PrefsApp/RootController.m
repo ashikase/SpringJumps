@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-24 14:29:59
+ * Last-modified: 2009-05-02 12:40:54
  */
 
 /**
@@ -104,18 +104,6 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
     // Reset the table by deselecting the current selection
     UITableView *tableView = [self tableView];
     [tableView deselectRowAtIndexPath:[tableView indexPathForSelectedRow] animated:YES];
-}
-
-- (void)viewWillDisappear:(BOOL)animated
-{
-    Preferences *prefs = [Preferences sharedInstance];
-    if ([prefs isModified]) {
-        // Write preferences to disk
-        [prefs writeUserDefaults];
-
-        // Respring SpringBoard
-        notify_post("com.apple.language.changed");
-    }
 }
 
 #pragma mark - UITableViewDataSource

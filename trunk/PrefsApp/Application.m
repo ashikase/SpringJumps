@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-24 18:47:50
+ * Last-modified: 2009-05-02 12:51:32
  */
 
 /**
@@ -89,6 +89,18 @@
     [window release];
 
     [super dealloc];
+}
+
+- (void)applicationWillTerminate:(UIApplication *)application
+{
+    Preferences *prefs = [Preferences sharedInstance];
+    if ([prefs isModified]) {
+        // Write preferences to disk
+        [prefs writeUserDefaults];
+
+        // Respring SpringBoard
+        notify_post("com.apple.language.changed");
+    }
 }
 
 @end
