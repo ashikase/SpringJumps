@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2008-12-06 22:41:58
+ * Last-modified: 2009-05-02 13:43:43
  */
 
 /**
@@ -86,24 +86,6 @@
     [dict setObject:[NSNumber numberWithBool:enabled] forKey:@"enabled"];
     [dict setObject:name forKey:@"name"];
     return dict;
-}
-
-#pragma mark - Properties
-
-- (void)setEnabled:(BOOL)enabled_
-{
-    if (enabled != enabled_) {
-        enabled = enabled_;
-        [[Preferences sharedInstance] setModified:YES];
-    }
-}
-
-- (void)setName:(NSString *)name_
-{
-    if (name != name_) {
-        name = [name_ copy];
-        [[Preferences sharedInstance] setModified:YES];
-    }
 }
 
 @end
