@@ -1,12 +1,15 @@
 #import <Foundation/NSObject.h>
 
+
 @class NSArray;
+@class NSDictionary;
 @class NSMutableArray;
 @class ShortcutConfig;
 
 @interface Preferences : NSObject
 {
-    BOOL modified;
+    NSDictionary *initialValues;
+    NSDictionary *onDiskValues;
 
     BOOL firstRun;
     BOOL showPageTitles;
@@ -14,7 +17,6 @@
     NSMutableArray *shortcutConfigs;
 }
 
-@property(nonatomic, getter=isModified) BOOL modified;
 @property(nonatomic) BOOL firstRun;
 @property(nonatomic) BOOL showPageTitles;
 @property(nonatomic, getter=jumpDockIsEnabled) BOOL enableJumpDock;
@@ -23,9 +25,14 @@
 + (Preferences *)sharedInstance;
 + (ShortcutConfig *)configForShortcut:(int)i;
 
+- (NSDictionary *)dictionaryRepresentation;
+
+- (BOOL)isModified;
+- (BOOL)needsRespring;
+
 - (void)registerDefaults;
-- (void)readUserDefaults;
-- (void)writeUserDefaults;
+- (void)readFromDisk;
+- (void)writeToDisk;
 
 @end
 
