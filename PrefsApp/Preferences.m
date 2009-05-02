@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-22 13:02:41
+ * Last-modified: 2009-05-02 13:15:50
  */
 
 /**
@@ -75,6 +75,13 @@
     self = [super init];
     if (self) {
         shortcutConfigs = [[NSMutableArray alloc] initWithCapacity:MAX_PAGES];
+
+        // Setup default values
+        [self registerDefaults];
+
+        // Load preference values into memory
+        [self readUserDefaults];
+
     }
     return self;
 }
@@ -111,6 +118,9 @@
 
 - (void)registerDefaults
 {
+    // NOTE: This method sets default values for options that are not already
+    //       already set in the application's on-disk preferences list.
+
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:2];
 
