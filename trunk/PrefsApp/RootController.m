@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-05-02 12:40:54
+ * Last-modified: 2009-05-02 14:18:07
  */
 
 /**
@@ -349,7 +349,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 {
     UITableView *tableView = [self tableView];
     NSIndexPath *indexPath = [tableView indexPathForCell:[control superview]];
-    if (indexPath.section == 0) {
+    if (indexPath.section == 1) {
         if (indexPath.row == 0) {
             // Toggled show page titles
             [[Preferences sharedInstance] setShowPageTitles:[control isOn]];
