@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-05-02 14:19:58
+ * Last-modified: 2009-05-02 22:01:35
  */
 
 /**
@@ -233,6 +233,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
                 UIImage *icon = [UIImage imageWithContentsOfFile:iconPath];
                 icon = [icon _imageScaledToSize:CGSizeMake(35, 36) interpolationQuality:0];
                 [cell setImage:icon];
+                [iconPath release];
             }
 
             [toggle setOn:config.enabled];
