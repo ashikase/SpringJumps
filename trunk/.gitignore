@@ -1,0 +1,9 @@
+# Ignore object files
+*.o
+
+# Ignore resulting executable/library
+*.dylib
+SpringJumpsPrefs
+
+# Ignore helper scripts
+make.sh
