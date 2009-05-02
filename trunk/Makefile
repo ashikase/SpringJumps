@@ -2,7 +2,7 @@ NAME = SpringJumps
 
 # These paths must be changed to match the compilation environment
 SYS_PATH = /opt/iPhone/sys
-SUB_PATH=/files/Platforms/iPhone/Projects/Others/saurik/mobilesubstrate
+SUB_PATH = /files/Platforms/iPhone/Projects/Others/saurik/mobilesubstrate
 LDID = /opt/iPhone/ldid
 
 CXX = arm-apple-darwin9-g++
@@ -31,6 +31,6 @@ install:
 	ssh root@iphone restart
 
 $(NAME).dylib: $(SRCS)
-	$(CXX) -dynamiclib $(CXXFLAGS) -o $@ $(filter %.mm,$^) $(filter %.m,$^) -init _SpringJumpsInitialize $(LDFLAGS)
+	$(CXX) -dynamiclib $(CXXFLAGS) -o $@ $(filter %.mm,$^) -init _$(NAME)Initialize $(LDFLAGS)
 
 .PHONY: all clean
