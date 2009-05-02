@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-05-02 13:24:59
+ * Last-modified: 2009-05-02 13:46:12
  */
 
 /**
@@ -57,7 +57,6 @@
 - (void)applicationDidFinishLaunching:(UIApplication *)application
 {
     Preferences *prefs = [Preferences sharedInstance];
-
     if ([prefs firstRun]) {
         // Show a once-only warning
         NSString *title = [NSString stringWithFormat:@"Welcome to %@", @APP_TITLE];
@@ -68,7 +67,7 @@
 
         // Save settings so that this warning will not be shown again
         [prefs setFirstRun:NO];
-        [prefs writeUserDefaults];
+        [prefs writeToDisk];
     }
 
     // Create our navigation controller with the initial view controller
@@ -95,10 +94,11 @@
     Preferences *prefs = [Preferences sharedInstance];
     if ([prefs isModified]) {
         // Write preferences to disk
-        [prefs writeUserDefaults];
+        [prefs writeToDisk];
 
         // Respring SpringBoard
-        notify_post("com.apple.language.changed");
+        if ([prefs needsRespring])
+            notify_post("com.apple.language.changed");
     }
 }
 

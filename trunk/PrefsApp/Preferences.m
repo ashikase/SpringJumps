@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-05-02 13:15:50
+ * Last-modified: 2009-05-02 13:41:26
  */
 
 /**
@@ -51,11 +51,12 @@
 
 @implementation Preferences
 
-@synthesize modified;
 @synthesize firstRun;
 @synthesize showPageTitles;
 @synthesize enableJumpDock;
 @synthesize shortcutConfigs;
+
+#pragma mark - Methods
 
 + (Preferences *)sharedInstance
 {
@@ -80,41 +81,58 @@
         [self registerDefaults];
 
         // Load preference values into memory
-        [self readUserDefaults];
+        [self readFromDisk];
 
+        // Retain a copy of the initial values of the preferences
+        initialValues = [[self dictionaryRepresentation] retain];
+
+        // The on-disk values at startup are the same as initialValues
+        onDiskValues = [initialValues retain];
     }
     return self;
 }
 
 - (void)dealloc
 {
+    [onDiskValues release];
+    [initialValues release];
     [shortcutConfigs release];
     [super dealloc];
 }
 
-#pragma mark - Properties
-
-// NOTE: Do not set modified flag for changes to firstRun,
-//       as setting modified will cause a respring even if
-//       no other changes have been made.
-
-- (void)setShowPageTitles:(BOOL)show
-{
-    if (showPageTitles != show) {
-        showPageTitles = show;
-        modified = YES;
-    }
-}
-
-- (void)setEnableJumpDock:(BOOL)enable
-{
-    if (enableJumpDock != enable) {
-        enableJumpDock = enable;
-        modified = YES;
-    }
-}
-
 #pragma mark - Other
+
+- (NSDictionary *)dictionaryRepresentation
+{
+    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:4];
+
+    [dict setObject:[NSNumber numberWithBool:firstRun] forKey:@"firstRun"];
+    [dict setObject:[NSNumber numberWithBool:showPageTitles] forKey:@"showPageTitles"];
+    [dict setObject:[NSNumber numberWithBool:enableJumpDock] forKey:@"enableJumpDock"];
+
+    NSMutableArray *array = [NSMutableArray arrayWithCapacity:MAX_PAGES];
+    for (int i = 0; i < MAX_PAGES; i++) {
+        ShortcutConfig *config = [shortcutConfigs objectAtIndex:i];
+        [array addObject:[config dictionaryRepresentation]];
+    }
+    [dict setObject:array forKey:@"shortcuts"];
+
+    return dict;
+}
+
+#pragma mark - Status
+
+- (BOOL)isModified
+{
+    return ![[self dictionaryRepresentation] isEqual:onDiskValues];
+}
+
+- (BOOL)needsRespring
+{
+    return ![[self dictionaryRepresentation] isEqual:initialValues];
+}
+
+#pragma mark - Read/Write methods
 
 - (void)registerDefaults
 {
@@ -140,9 +158,7 @@
     [defaults registerDefaults:dict];
 }
 
-#pragma mark - Read/Write methods
-
-- (void)readUserDefaults
+- (void)readFromDisk
 {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 
@@ -158,21 +174,17 @@
     }
 }
 
-- (void)writeUserDefaults
+- (void)writeToDisk
 {
+    NSDictionary *dict = [self dictionaryRepresentation];
+
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-
-    [defaults setObject:[NSNumber numberWithBool:firstRun] forKey:@"firstRun"];
-    [defaults setObject:[NSNumber numberWithBool:showPageTitles] forKey:@"showPageTitles"];
-    [defaults setObject:[NSNumber numberWithBool:enableJumpDock] forKey:@"enableJumpDock"];
-
-    NSMutableArray *array = [NSMutableArray arrayWithCapacity:MAX_PAGES];
-    for (int i = 0; i < MAX_PAGES; i++) {
-        ShortcutConfig *config = [shortcutConfigs objectAtIndex:i];
-        [array addObject:[config dictionaryRepresentation]];
-    }
-    [defaults setObject:array forKey:@"shortcuts"];
+    [defaults setPersistentDomain:dict forName:[[NSBundle mainBundle] bundleIdentifier]];
     [defaults synchronize];
+
+    // Update the list of on-disk values
+    [onDiskValues release];
+    onDiskValues = [dict retain];
 }
 
 @end
