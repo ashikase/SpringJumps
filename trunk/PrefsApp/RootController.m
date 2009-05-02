@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-05-02 14:18:07
+ * Last-modified: 2009-05-02 14:19:58
  */
 
 /**
@@ -43,9 +43,7 @@
 
 #import "RootController.h"
 
-#include <notify.h>
-
-#import <Foundation/NSSet.h>
+#import <Foundation/Foundation.h>
 
 #import <UIKit/UIKit.h>
 #import <UIKit/UIAlertView-Private.h>
