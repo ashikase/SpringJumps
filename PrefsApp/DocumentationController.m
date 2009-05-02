@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-22 14:37:28
+ * Last-modified: 2009-05-02 22:04:52
  */
 
 /**
@@ -69,12 +69,13 @@
 
 - (void)loadView
 {
-    CGRect frame = [[UIScreen mainScreen] bounds];
+    CGRect frame = [[UIScreen mainScreen] applicationFrame];
 
     UIView *view = [[UIView alloc] initWithFrame:frame];
     [view setBackgroundColor:[UIColor groupTableViewBackgroundColor]];
 
-    webView = [[UIWebView alloc] initWithFrame:frame];
+    webView = [[UIWebView alloc] initWithFrame:[view bounds]];
+    [webView setAutoresizingMask:(1 << 4)]; // UIViewAutoresizingFlexibleHeight;
     [webView setBackgroundColor:[UIColor groupTableViewBackgroundColor]];
     [webView setDelegate:self];
     [webView setHidden:YES];
@@ -105,6 +106,19 @@
 - (void)webView:(UIWebView *)webView_ didFailLoadWithError:(NSError *)error
 {
     // FIXME: Should handle this somehow, perhaps display an error popup?
+}
+
+- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request
+    navigationType:(int)navigationType
+{
+    BOOL ret = YES;
+
+    NSURL *url = [request URL];
+    if (navigationType == 0 && [[url scheme] hasPrefix: @"http"])
+        // http(s) link was clicked, open with external browser
+        ret = ![[UIApplication sharedApplication] openURL:url];
+
+    return ret;
 }
 
 #pragma mark - File loading methods
