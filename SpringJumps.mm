@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-04-30 15:26:36
+ * Last-modified: 2009-05-06 15:04:18
  */
 
 /**
@@ -372,8 +372,6 @@ extern "C" void SpringJumpsInitialize()
     Class $SBApplicationIcon(objc_getClass("SBApplicationIcon"));
     _SBApplicationIcon$displayName =
         MSHookMessage($SBApplicationIcon, @selector(displayName), &$SBApplicationIcon$displayName);
-    _SBApplicationIcon$mouseDown$ =
-        MSHookMessage($SBApplicationIcon, @selector(mouseDown:), &$SBApplicationIcon$mouseDown$);
 
     // FIXME: Need to rethink where and when preferences are loaded
     Boolean valid;
@@ -382,6 +380,9 @@ extern "C" void SpringJumpsInitialize()
         jumpDockIsEnabled = flag;
 
     if (jumpDockIsEnabled) {
+        _SBApplicationIcon$mouseDown$ =
+            MSHookMessage($SBApplicationIcon, @selector(mouseDown:), &$SBApplicationIcon$mouseDown$);
+
         Class $SBTouchPageIndicator = objc_getClass("SBTouchPageIndicator");
         _SBTouchPageIndicator$mouseDown$ =
             MSHookMessage($SBTouchPageIndicator, @selector(mouseDown:), &$SBTouchPageIndicator$mouseDown$);
