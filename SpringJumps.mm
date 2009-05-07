@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-05-06 15:04:18
+ * Last-modified: 2009-05-07 17:05:30
  */
 
 /**
@@ -203,7 +203,7 @@ static void updatePageTitle()
 
             if (currentPage != _currentIconListIndex) {
                 // Update page title-bar
-                if (shortcutStates[_currentIconListIndex])
+                if (jumpDockIsEnabled || shortcutStates[_currentIconListIndex])
                     [iconController setIdleModeText:shortcutNames[_currentIconListIndex]];
                 else
                     [iconController setIdleModeText:nil];
