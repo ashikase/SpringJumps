@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-05-02 22:01:35
+ * Last-modified: 2009-05-07 21:02:29
  */
 
 /**
@@ -45,45 +45,15 @@
 
 #import <Foundation/Foundation.h>
 
-#import <UIKit/UIKit.h>
-#import <UIKit/UIAlertView-Private.h>
 #import <UIKit/UISwitch.h>
 #import <UIKit/UIViewController-UINavigationControllerItem.h>
 
 #import "Constants.h"
+#import "GeneralPrefsController.h"
 #import "DocumentationController.h"
+#import "JumpIconsController.h"
 #import "Preferences.h"
-#import "ShortcutConfig.h"
 
-extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier);
-
-
-@interface PreferencesCell : UITableViewCell
-{
-    float touchLocation;
-}
-
-@property(nonatomic, readonly) float touchLocation;
-
-@end
-
-@implementation PreferencesCell
-
-@synthesize touchLocation;
-
-- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
-{
-    UITouch *touch = [touches anyObject];
-    if (touch) {
-        CGPoint point = [touch locationInView:self];
-        touchLocation = point.x;
-    }
-}
-
-@end
-
-//______________________________________________________________________________
-//______________________________________________________________________________
 
 @implementation RootController
 
@@ -91,7 +61,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 {
     self = [super initWithStyle:style];
     if (self) {
-        [self setTitle:@"SpringJumps Prefs"];
+        [self setTitle:@"SpringJumps"];
         [[self navigationItem] setBackButtonTitle:@"Back"];
     }
     return self;
@@ -108,137 +78,62 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
 - (int)numberOfSectionsInTableView:(UITableView *)tableView
 {
-	return 3;
+	return 2;
 }
 
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(int)section
 {
-    switch (section) {
-        case 0:
-            return @"Documentation";
-        case 1:
-            return @"General";
-        case 2:
-            return @"Shortcuts (Tap label to rename)";
-        default:
-            return nil;
-    }
+    return (section == 0) ? @"Documentation" : @"Preferences";
 }
 
 - (int)tableView:(UITableView *)tableView numberOfRowsInSection:(int)section
 {
-    switch (section) {
-        case 0:
-            // Documentation
-            return 4;
-        case 1:
-            // General
-            return 2;
-        case 2:
-            // Shortcuts
-            return MAX_PAGES;
-        default:
-            return 0;
-    }
+    return (section == 0) ? 4 : 2;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     static NSString *reuseIdSimple = @"SimpleCell";
     static NSString *reuseIdSafari = @"SafariCell";
-    static NSString *reuseIdToggle = @"ToggleCell";
 
     UITableViewCell *cell = nil;
-    if (indexPath.section == 0) {
-        // Documentation
-        if (indexPath.row == 3) {
-            // Try to retrieve from the table view a now-unused cell with the given identifier
-            cell = [tableView dequeueReusableCellWithIdentifier:reuseIdSafari];
-            if (cell == nil) {
-                // Cell does not exist, create a new one
-                cell = [[[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSafari] autorelease];
-                [cell setSelectionStyle:2]; // Gray
-
-                UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
-                NSString *labelText = @"(via Safari)";
-                [label setText:labelText];
-                [label setTextColor:[UIColor colorWithRed:0.2f green:0.31f blue:0.52f alpha:1.0f]];
-                UIFont *font = [UIFont systemFontOfSize:16.0f];
-                [label setFont:font];
-                CGSize size = [labelText sizeWithFont:font];
-                [label setFrame:CGRectMake(0, 0, size.width, size.height)];
-
-                [cell setAccessoryView:label];
-                [label release];
-            }
-
-            [cell setText:@"Project Homepage"];
-        } else {
-            // Try to retrieve from the table view a now-unused cell with the given identifier
-            cell = [tableView dequeueReusableCellWithIdentifier:reuseIdSimple];
-            if (cell == nil) {
-                // Cell does not exist, create a new one
-                cell = [[[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSimple] autorelease];
-                [cell setSelectionStyle:2]; // Gray
-                [cell setAccessoryType:1]; // Simple arrow
-            }
-
-            switch (indexPath.row) {
-                case 0:
-                    [cell setText:@"How to Use"];
-                    break;
-                case 1:
-                    [cell setText:@"Release Notes"];
-                    break;
-                case 2:
-                    [cell setText:@"Known Issues"];
-                    break;
-            }
-        }
-    } else {
+    if (indexPath.section == 0 && indexPath.row == 3) {
         // Try to retrieve from the table view a now-unused cell with the given identifier
-        cell = [tableView dequeueReusableCellWithIdentifier:reuseIdToggle];
+        cell = [tableView dequeueReusableCellWithIdentifier:reuseIdSafari];
         if (cell == nil) {
             // Cell does not exist, create a new one
-            cell = [[[PreferencesCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdToggle] autorelease];
-            [cell setSelectionStyle:0];
+            cell = [[[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSafari] autorelease];
+            [cell setSelectionStyle:2]; // Gray
 
-            UISwitch *toggle = [[UISwitch alloc] init];
-            [toggle addTarget:self action:@selector(switchToggled:) forControlEvents:4096]; // ValueChanged
-            [cell setAccessoryView:toggle];
-            [toggle release];
+            UILabel *label = [[UILabel alloc] initWithFrame:CGRectZero];
+            NSString *labelText = @"(via Safari)";
+            [label setText:labelText];
+            [label setTextColor:[UIColor colorWithRed:0.2f green:0.31f blue:0.52f alpha:1.0f]];
+            UIFont *font = [UIFont systemFontOfSize:16.0f];
+            [label setFont:font];
+            CGSize size = [labelText sizeWithFont:font];
+            [label setFrame:CGRectMake(0, 0, size.width, size.height)];
+
+            [cell setAccessoryView:label];
+            [label release];
         }
 
-        UISwitch *toggle = [cell accessoryView];
-        if (indexPath.section == 1) {
-            // General
-            [cell setImage:nil];
-            [toggle setEnabled:YES];
+        [cell setText:@"Project Homepage"];
+    } else {
+        static NSString *cellTitles[][3] = {
+            { @"How to Use", @"Release Notes", @"Known Issues" },
+            { @"General", @"Jump Icons", nil }
+        };
 
-            if (indexPath.row == 0) {
-                [cell setText:@"Page titles"];
-                [toggle setOn:[[Preferences sharedInstance] showPageTitles]];
-            } else {
-                [cell setText:@"Jump dock"];
-                [toggle setOn:[[Preferences sharedInstance] jumpDockIsEnabled]];
-            }
-        } else {
-            // Shortcuts
-            ShortcutConfig *config = [Preferences configForShortcut:indexPath.row];
-            [cell setText:config.name];
-
-            NSString *identifier = [NSString stringWithFormat:@"%s.%d", "jp.ashikase.springjumps", indexPath.row];
-            NSString *iconPath = SBSCopyIconImagePathForDisplayIdentifier(identifier);
-            if (iconPath != nil) {
-                UIImage *icon = [UIImage imageWithContentsOfFile:iconPath];
-                icon = [icon _imageScaledToSize:CGSizeMake(35, 36) interpolationQuality:0];
-                [cell setImage:icon];
-                [iconPath release];
-            }
-
-            [toggle setOn:config.enabled];
-            [toggle setEnabled:![[Preferences sharedInstance] jumpDockIsEnabled]];
+        // Try to retrieve from the table view a now-unused cell with the given identifier
+        cell = [tableView dequeueReusableCellWithIdentifier:reuseIdSimple];
+        if (cell == nil) {
+            // Cell does not exist, create a new one
+            cell = [[[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSimple] autorelease];
+            [cell setSelectionStyle:2]; // Gray
+            [cell setAccessoryType:1]; // Simple arrow
         }
+        [cell setText:cellTitles[indexPath.section][indexPath.row]];
     }
 
     return cell;
@@ -248,98 +143,31 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    switch (indexPath.section) {
-        case 0:
-            {
-                // Documentation
-                NSString *fileName = nil;
-                NSString *title = nil;
+    UIViewController *vc = nil;
 
-                switch (indexPath.section) {
-                    case 0:
-                        {
-                            switch (indexPath.row) {
-                                case 0:
-                                    fileName = @"usage.html";
-                                    title = @"How to Use";
-                                    break;
-                                case 1:
-                                    fileName = @"release_notes.html";
-                                    title = @"Release Notes";
-                                    break;
-                                case 2:
-                                    fileName = @"known_issues.html";
-                                    title = @"Known Issues";
-                                    break;
-                                case 3:
-                                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@DEVSITE_URL]];
-                                    break;
-                            }
-                            if (fileName && title)
-                                [[self navigationController] pushViewController:[[[DocumentationController alloc]
-                                    initWithContentsOfFile:fileName title:title] autorelease] animated:YES];
-                        }
-                }
-            }
-            break;
-        case 2:
-            // Shortcuts
-            {
-                PreferencesCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+    if (indexPath.section == 0) {
+        // Documentation
+        static NSString *fileNames[] = { @"usage.html", @"release_notes.html", @"known_issues.html" };
+        static NSString *titles[] = { @"How to Use", @"Release Notes", @"Known Issues" };
 
-                // NOTE: Thie check is to make sure the popup and switch are not
-                //       activated at the same time
-                if ([cell touchLocation] < [[cell accessoryView] frame].origin.x) {
-                    // Record which shortcut was selected
-                    selectedShortcut = indexPath.row;
-
-                    // Show popup to change shortcut title
-                    NSString *title = [NSString stringWithFormat:@"Shortcut for Page %d", selectedShortcut];
-                    UIAlertView *alert = [[[UIAlertView alloc] initWithTitle:title message:nil
-                        delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK", nil]
-                        autorelease];
-                    [alert addTextFieldWithValue:[cell text] label:@"<Enter shortcut name>"];
-                    [[alert textField] setDelegate:self];
-                    [[alert textField] setClearButtonMode:1]; // UITextFieldViewModeWhileEditing
-                    [[alert textField] setAutocorrectionType:1]; // UITextAutocorrectionTypeNo
-                    [alert show];
-                } else {
-                    // Reset the table by deselecting the current selection
-                    UITableView *tableView = [self tableView];
-                    [tableView deselectRowAtIndexPath:[tableView indexPathForSelectedRow] animated:NO];
-                }
-
-            }
-            break;
+        if (indexPath.row == 3)
+            // Project Homepage
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@DEVSITE_URL]];
+        else
+            vc = [[[DocumentationController alloc]
+                initWithContentsOfFile:fileNames[indexPath.row] title:titles[indexPath.row]]
+                autorelease];
+    } else {
+        // Preferences
+        if (indexPath.row == 0)
+            vc = [[[GeneralPrefsController alloc] initWithStyle:1] autorelease];
+        else
+            //vc = [[[AppSpecificPrefsController alloc] initWithStyle:1] autorelease];
+            vc = [[[JumpIconsController alloc] initWithStyle:1] autorelease];
     }
-}
 
-#pragma mark - UIAlertView delegates
-
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(int)index
-{
-    // Reset the table by deselecting the current selection
-    UITableView *tableView = [self tableView];
-    [tableView deselectRowAtIndexPath:[tableView indexPathForSelectedRow] animated:YES];
-
-    if (index == 1) {
-        UITableViewCell *cell = [tableView cellForRowAtIndexPath:
-            [NSIndexPath indexPathForRow:selectedShortcut inSection:1]];
-        [cell setText:[[alertView textField] text]];
-
-        ShortcutConfig *config = [Preferences configForShortcut:selectedShortcut];
-        [config setName:[[alertView textField] text]];
-    }
-}
-
-// NOTE: The following method allows the use of the return key to select "OK"
-- (BOOL)textFieldShouldReturn:(UITextField *)textField
-{
-    UIAlertView *alert = (UIAlertView *)[textField superview];
-	[self alertView:alert clickedButtonAtIndex:1];
-	[alert dismissWithClickedButtonIndex:1 animated:NO];
-
-	return NO;
+    if (vc)
+        [[self navigationController] pushViewController:vc animated:YES];
 }
 
 #pragma mark - Switch delegate
