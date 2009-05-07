@@ -1,6 +1,6 @@
 Package: jp.ashikase.springjumps
 Name: SpringJumps
-Version: svn.r87
+Version: svn.r93
 Architecture: iphoneos-arm
 Description: Quickly jump to different SpringBoard pages
 Homepage: http://iphone-springjumps.googlecode.com/
