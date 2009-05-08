@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-05-07 21:02:20
+ * Last-modified: 2009-05-08 11:05:01
  */
 
 /**
@@ -208,7 +208,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
     if (index == 1) {
         UITableViewCell *cell = [tableView cellForRowAtIndexPath:
-            [NSIndexPath indexPathForRow:selectedShortcut inSection:1]];
+            [NSIndexPath indexPathForRow:selectedShortcut inSection:0]];
         [cell setText:[[alertView textField] text]];
 
         ShortcutConfig *config = [Preferences configForShortcut:selectedShortcut];
