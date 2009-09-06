@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-05-07 17:05:30
+ * Last-modified: 2009-07-04 02:01:02
  */
 
 /**
@@ -54,7 +54,7 @@ extern "C" GSEventRecord * _GSEventGetGSEventRecord(struct __GSEvent *);
 #import <SpringBoard/SBIconController.h>
 #import <SpringBoard/SBIconList.h>
 #import <SpringBoard/SBIconModel.h>
-#import <SpringBoard/SBTouchPageIndicator.h>
+//#import <SpringBoard/SBTouchPageIndicator.h>
 #import <SpringBoard/SBUIController.h>
 #import <SpringBoard/SpringBoard.h>
 
@@ -267,6 +267,7 @@ HOOK(SBApplicationIcon, mouseDown$, void, struct __GSEvent *event)
 //______________________________________________________________________________
 //______________________________________________________________________________
 
+#if 0
 HOOK(SBTouchPageIndicator, mouseDown$, void, struct __GSEvent *event)
 {
     GSEventRecord *record = _GSEventGetGSEventRecord(event);
@@ -315,6 +316,7 @@ HOOK(SBTouchPageIndicator, mouseUp$, void, struct __GSEvent *event)
         CALL_ORIG(SBTouchPageIndicator, mouseUp$, event);
     }
 }
+#endif
 
 //______________________________________________________________________________
 //______________________________________________________________________________
@@ -383,11 +385,13 @@ extern "C" void SpringJumpsInitialize()
         _SBApplicationIcon$mouseDown$ =
             MSHookMessage($SBApplicationIcon, @selector(mouseDown:), &$SBApplicationIcon$mouseDown$);
 
+#if 0
         Class $SBTouchPageIndicator = objc_getClass("SBTouchPageIndicator");
         _SBTouchPageIndicator$mouseDown$ =
             MSHookMessage($SBTouchPageIndicator, @selector(mouseDown:), &$SBTouchPageIndicator$mouseDown$);
         _SBTouchPageIndicator$mouseUp$ =
             MSHookMessage($SBTouchPageIndicator, @selector(mouseUp:), &$SBTouchPageIndicator$mouseUp$);
+#endif
 
         Class $SpringBoard(objc_getClass("SpringBoard"));
         _SpringBoard$lockButtonUp$ =
