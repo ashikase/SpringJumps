@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-11-08 23:10:38
+ * Last-modified: 2009-11-08 23:26:44
  */
 
 /**
@@ -233,9 +233,9 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
     [textField becomeFirstResponder];
 }
 
-- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(int)index
+- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(int)index
 {
-    UITableView *tableView = [self tableView];
+    UITableView *tableView = self.tableView;
 
     if (index == 1) {
         UITableViewCell *cell = [tableView cellForRowAtIndexPath:
@@ -256,8 +256,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 - (BOOL)textFieldShouldReturn:(UITextField *)textField_
 {
     UIAlertView *alert = (UIAlertView *)[textField_ superview];
-	[self alertView:alert clickedButtonAtIndex:1];
-	[alert dismissWithClickedButtonIndex:1 animated:NO];
+	[alert dismissWithClickedButtonIndex:1 animated:YES];
 
 	return NO;
 }
