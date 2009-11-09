@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-07-04 02:01:02
+ * Last-modified: 2009-09-07 00:39:52
  */
 
 /**
@@ -353,27 +353,21 @@ extern "C" void SpringJumpsInitialize()
 
     // Setup hooks
     Class $SBIconModel(objc_getClass("SBIconModel"));
-    _SBIconModel$init =
-        MSHookMessage($SBIconModel, @selector(init), &$SBIconModel$init);
-    _SBIconModel$dealloc =
-        MSHookMessage($SBIconModel, @selector(dealloc), &$SBIconModel$dealloc);
+    LOAD_HOOK($SBIconModel, @selector(init), SBIconModel$init);
+    LOAD_HOOK($SBIconModel, @selector(dealloc), SBIconModel$dealloc);
 
     Class $SBIconController(objc_getClass("SBIconController"));
-    _SBIconController$clickedIcon$ =
-        MSHookMessage($SBIconController, @selector(clickedIcon:), &$SBIconController$clickedIcon$);
+    LOAD_HOOK($SBIconController, @selector(clickedIcon:), SBIconController$clickedIcon$);
 
     if (class_getInstanceMethod($SBIconController, @selector(updateCurrentIconListIndex)))
-        _SBIconController$updateCurrentIconListIndex = 
-            MSHookMessage($SBIconController, @selector(updateCurrentIconListIndex),
-                    &$SBIconController$updateCurrentIconListIndex);
+        LOAD_HOOK($SBIconController, @selector(updateCurrentIconListIndex),
+                SBIconController$updateCurrentIconListIndex);
     else
-        _SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$ = 
-            MSHookMessage($SBIconController, @selector(updateCurrentIconListIndexUpdatingPageIndicator:),
-                &$SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$);
+        LOAD_HOOK($SBIconController, @selector(updateCurrentIconListIndexUpdatingPageIndicator:),
+            SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$);
 
     Class $SBApplicationIcon(objc_getClass("SBApplicationIcon"));
-    _SBApplicationIcon$displayName =
-        MSHookMessage($SBApplicationIcon, @selector(displayName), &$SBApplicationIcon$displayName);
+    LOAD_HOOK($SBApplicationIcon, @selector(displayName), SBApplicationIcon$displayName);
 
     // FIXME: Need to rethink where and when preferences are loaded
     Boolean valid;
@@ -382,22 +376,17 @@ extern "C" void SpringJumpsInitialize()
         jumpDockIsEnabled = flag;
 
     if (jumpDockIsEnabled) {
-        _SBApplicationIcon$mouseDown$ =
-            MSHookMessage($SBApplicationIcon, @selector(mouseDown:), &$SBApplicationIcon$mouseDown$);
+        LOAD_HOOK($SBApplicationIcon, @selector(mouseDown:), SBApplicationIcon$mouseDown$);
 
 #if 0
         Class $SBTouchPageIndicator = objc_getClass("SBTouchPageIndicator");
-        _SBTouchPageIndicator$mouseDown$ =
-            MSHookMessage($SBTouchPageIndicator, @selector(mouseDown:), &$SBTouchPageIndicator$mouseDown$);
-        _SBTouchPageIndicator$mouseUp$ =
-            MSHookMessage($SBTouchPageIndicator, @selector(mouseUp:), &$SBTouchPageIndicator$mouseUp$);
+        LOAD_HOOK($SBTouchPageIndicator, @selector(mouseDown:), SBTouchPageIndicator$mouseDown$);
+        LOAD_HOOK($SBTouchPageIndicator, @selector(mouseUp:), SBTouchPageIndicator$mouseUp$);
 #endif
 
         Class $SpringBoard(objc_getClass("SpringBoard"));
-        _SpringBoard$lockButtonUp$ =
-            MSHookMessage($SpringBoard, @selector(lockButtonUp:), &$SpringBoard$lockButtonUp$);
-        _SpringBoard$menuButtonUp$ =
-            MSHookMessage($SpringBoard, @selector(menuButtonUp:), &$SpringBoard$menuButtonUp$);
+        LOAD_HOOK($SpringBoard, @selector(lockButtonUp:), SpringBoard$lockButtonUp$);
+        LOAD_HOOK($SpringBoard, @selector(menuButtonUp:), SpringBoard$menuButtonUp$);
     }
 
     [pool release];

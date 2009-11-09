@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-17 22:19:01
+ * Last-modified: 2009-09-07 00:37:59
  */
 
 /**
@@ -54,6 +54,9 @@
 #define HOOK(class, name, type, args...) \
     static type (*_ ## class ## $ ## name)(class *self, SEL sel, ## args) = NULL; \
     static type $ ## class ## $ ## name(class *self, SEL sel, ## args)
+
+#define LOAD_HOOK(class, sel, imp) \
+    MSHookMessage(class, sel, MSHake(imp))
 
 #define CALL_ORIG(class, name, args...) \
     _ ## class ## $ ## name(self, sel, ## args)
