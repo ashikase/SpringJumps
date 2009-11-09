@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-05-07 21:33:40
+ * Last-modified: 2009-10-02 00:19:38
  */
 
 /**
@@ -47,13 +47,7 @@
 
 #import <CoreGraphics/CGGeometry.h>
 
-#import <Foundation/Foundation.h>
-
-#import <UIKit/UISwitch.h>
-#import <UIKit/UIViewController-UINavigationControllerItem.h>
-
-#import "Constants.h"
-#import "DocumentationController.h"
+#import "HtmlDocController.h"
 #import "Preferences.h"
 
 #define HELP_FILE "general_prefs.html"
@@ -62,12 +56,11 @@
 @implementation GeneralPrefsController
 
 
-- (id)initWithStyle:(int)style
+- (id)initWithStyle:(UITableViewStyle)style
 {
     self = [super initWithStyle:style];
     if (self) {
-        [self setTitle:@"General"];
-        [[self navigationItem] setBackButtonTitle:@"Back"];
+        self.title = @"General";
         [[self navigationItem] setRightBarButtonItem:
              [[UIBarButtonItem alloc] initWithTitle:@"Help" style:5
                 target:self
@@ -112,7 +105,7 @@
         [toggle release];
     }
 
-    UISwitch *toggle = [cell accessoryView];
+    UISwitch *toggle = (UISwitch *)[cell accessoryView];
     if (indexPath.row == 0) {
         [cell setText:@"Page titles"];
         [toggle setOn:[[Preferences sharedInstance] showPageTitles]];
@@ -129,7 +122,7 @@
 - (void)switchToggled:(UISwitch *)control
 {
     UITableView *tableView = [self tableView];
-    NSIndexPath *indexPath = [tableView indexPathForCell:[control superview]];
+    NSIndexPath *indexPath = [tableView indexPathForCell:(UITableViewCell *)[control superview]];
     if (indexPath.row == 0) {
         // Toggled show page titles
         [[Preferences sharedInstance] setShowPageTitles:[control isOn]];
@@ -148,7 +141,7 @@
 - (void)helpButtonTapped
 {
     // Create and show help page
-    [[self navigationController] pushViewController:[[[DocumentationController alloc]
+    [[self navigationController] pushViewController:[[[HtmlDocController alloc]
         initWithContentsOfFile:@HELP_FILE title:@"Explanation"] autorelease] animated:YES];
 }
 

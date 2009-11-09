@@ -1,14 +1,13 @@
 /**
- * Name: SpringJumps
- * Type: iPhone OS 2.x SpringBoard extension (MobileSubstrate-based)
- * Description: Allows for the creation of icons that act as shortcuts
- *              to SpringBoard's different icon pages.
+ * Name: PrefsApp
+ * Type: iPhone OS application
+ * Description: a generic preferences application
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-22 12:53:11
+ * Last-modified: 2009-09-29 18:02:09
  */
 
 /**
- * Copyright (C) 2008  Lance Fetters (aka. ashikase)
+ * Copyright (C) 2009  Lance Fetters (aka. ashikase)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,18 +40,7 @@
  */
 
 
-#import <UIKit/UIApplication.h>
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
-@class UIWindow;
-@class UINavigationController;
-
-
-@interface Application : UIApplication
-{
-    UIWindow *window;
-    UINavigationController *navController;
-}
-
-@end
-
-/* vim: set syntax=objc sw=4 ts=4 sts=4 expandtab textwidth=80 ff=unix: */
+/* vim: set syntax=objcpp sw=4 ts=4 sts=4 expandtab textwidth=80 ff=unix: */

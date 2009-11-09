@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-05-08 11:05:01
+ * Last-modified: 2009-10-02 00:20:01
  */
 
 /**
@@ -43,18 +43,10 @@
 
 #import "JumpIconsController.h"
 
-#include <stdlib.h>
-
 #import <CoreGraphics/CGGeometry.h>
 
-#import <Foundation/Foundation.h>
-
-#import <UIKit/UIAlertView-Private.h>
-#import <UIKit/UISwitch.h>
-#import <UIKit/UIViewController-UINavigationControllerItem.h>
-
 #import "Constants.h"
-#import "DocumentationController.h"
+#import "HtmlDocController.h"
 #import "Preferences.h"
 #import "ShortcutConfig.h"
 
@@ -93,12 +85,11 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 @implementation JumpIconsController
 
 
-- (id)initWithStyle:(int)style
+- (id)initWithStyle:(UITableViewStyle)style
 {
     self = [super initWithStyle:style];
     if (self) {
-        [self setTitle:@"Jump Icons"];
-        [[self navigationItem] setBackButtonTitle:@"Back"];
+        self.title = @"Jump Icons";
         [[self navigationItem] setRightBarButtonItem:
              [[UIBarButtonItem alloc] initWithTitle:@"Help" style:5
                 target:self
@@ -148,12 +139,12 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
     NSString *iconPath = SBSCopyIconImagePathForDisplayIdentifier(identifier);
     if (iconPath != nil) {
         UIImage *icon = [UIImage imageWithContentsOfFile:iconPath];
-        icon = [icon _imageScaledToSize:CGSizeMake(35, 36) interpolationQuality:0];
+        //icon = [icon _imageScaledToSize:CGSizeMake(35, 36) interpolationQuality:0];
         [cell setImage:icon];
         [iconPath release];
     }
 
-    UISwitch *toggle = [cell accessoryView];
+    UISwitch *toggle = (UISwitch *)[cell accessoryView];
     [toggle setOn:config.enabled];
     [toggle setHidden:[[Preferences sharedInstance] jumpDockIsEnabled]];
 
@@ -164,7 +155,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    PreferencesCell *cell = [tableView cellForRowAtIndexPath:indexPath];
+    PreferencesCell *cell = (PreferencesCell *)[tableView cellForRowAtIndexPath:indexPath];
 
     // NOTE: Thie check is to make sure the popup and switch are not
     //       activated at the same time
@@ -193,7 +184,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
 - (void)switchToggled:(UISwitch *)control
 {
-    NSIndexPath *indexPath = [self.tableView indexPathForCell:[control superview]];
+    NSIndexPath *indexPath = [self.tableView indexPathForCell:(UITableViewCell *)[control superview]];
     ShortcutConfig *config = [Preferences configForShortcut:indexPath.row];
     [config setEnabled:[control isOn]];
 }
@@ -231,7 +222,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 - (void)helpButtonTapped
 {
     // Create and show help page
-    [[self navigationController] pushViewController:[[[DocumentationController alloc]
+    [[self navigationController] pushViewController:[[[HtmlDocController alloc]
         initWithContentsOfFile:@HELP_FILE title:@"Explanation"] autorelease] animated:YES];
 }
 

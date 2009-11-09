@@ -1,14 +1,13 @@
 /**
- * Name: SpringJumps
- * Type: iPhone OS 2.x SpringBoard extension (MobileSubstrate-based)
- * Description: Allows for the creation of icons that act as shortcuts
- *              to SpringBoard's different icon pages.
+ * Name: PrefsApp
+ * Type: iPhone OS application
+ * Description: a generic preferences application
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-22 13:37:43
+ * Last-modified: 2009-10-02 17:17:05
  */
 
 /**
- * Copyright (C) 2008  Lance Fetters (aka. ashikase)
+ * Copyright (C) 2009  Lance Fetters (aka. ashikase)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,21 +40,21 @@
  */
 
 
-#import <UIKit/UIKit.h>
+#import "AppDelegate.h"
+
+#import "Preferences.h"
+#import "RootController.h"
 
 
-@class NSString;
+@implementation AppDelegate
 
-@interface DocumentationController : UIViewController 
+- (void)applicationDidFinishLaunching:(UIApplication *)application
 {
-    NSString *fileName;
-    UIWebView *webView;
+    prefs = [[Preferences sharedInstance] retain];
+    rootController = [[RootController alloc] initWithStyle:UITableViewStyleGrouped];
+    devSite = @"http://iphone-prefsapp.googlecode.com/";
+    [super applicationDidFinishLaunching:application];
 }
-
-- (id)initWithContentsOfFile:(NSString *)fileName title:(NSString *)title;
-
-- (void)loadLocalFile;
-- (void)loadRemoteFile;
 
 @end
 
