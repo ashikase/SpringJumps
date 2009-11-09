@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-11-08 19:40:25
+ * Last-modified: 2009-11-08 23:07:52
  */
 
 /**
@@ -75,6 +75,7 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
         CGPoint point = [touch locationInView:self];
         touchLocation = point.x;
     }
+    [super touchesEnded:touches withEvent:event];
 }
 
 - (void)layoutSubviews
@@ -108,6 +109,12 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
     return self;
 }
 
+- (void)dealloc
+{
+    [textField release];
+    [super dealloc];
+}
+
 #pragma mark - UITableViewDataSource
 
 - (int)numberOfSectionsInTableView:(UITableView *)tableView
@@ -127,14 +134,14 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    static NSString *reuseIdToggle = @"ToggleCell";
+    static NSString *reuseIdToggle = @"DToggleCell";
 
     // Try to retrieve from the table view a now-unused cell with the given identifier
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:reuseIdToggle];
     if (cell == nil) {
         // Cell does not exist, create a new one
         cell = [[[PreferencesCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdToggle] autorelease];
-        [cell setSelectionStyle:0];
+        cell.selectionStyle = UITableViewCellSelectionStyleGray;
 
         UISwitch *toggle = [[UISwitch alloc] init];
         [toggle addTarget:self action:@selector(switchToggled:) forControlEvents:4096]; // ValueChanged
@@ -174,14 +181,10 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
         selectedShortcut = indexPath.row;
 
         // Show popup to change shortcut title
-        NSString *title = [NSString stringWithFormat:@"Shortcut for Page %d", selectedShortcut];
+        NSString *title = [NSString stringWithFormat:@"Name for Page %d", selectedShortcut];
         UIAlertView *alert = [[[UIAlertView alloc] initWithTitle:title message:nil
             delegate:self cancelButtonTitle:@"Cancel" otherButtonTitles:@"OK", nil]
             autorelease];
-        [alert addTextFieldWithValue:[cell text] label:@"<Enter shortcut name>"];
-        [[alert textField] setDelegate:self];
-        [[alert textField] setClearButtonMode:1]; // UITextFieldViewModeWhileEditing
-        [[alert textField] setAutocorrectionType:1]; // UITextAutocorrectionTypeNo
         [alert show];
     } else {
         // Reset the table by deselecting the current selection
@@ -201,26 +204,61 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
 #pragma mark - UIAlertView delegates
 
+- (void)willPresentAlertView:(UIAlertView *)alertView
+{
+    // Adjust the alert size to allow space for a text field
+    CGRect frame = alertView.frame;
+    frame = CGRectMake(frame.origin.x, frame.origin.y / 4.0f, frame.size.width, frame.size.height + 40.0f);
+    alertView.frame = frame;
+
+    // Shift buttons down to make space for text field
+    // NOTE: Should be at index 1 and 2, but done this way to be safe
+    for (int i = 1; i < [alertView.subviews count]; i++) {
+        UIView *view = [alertView.subviews objectAtIndex:i];
+        CGRect frame = view.frame;
+        frame.origin.y += 40.0f;
+        view.frame = frame;
+    }
+ 
+    // Add a text field
+    textField = [[UITextField alloc] initWithFrame:
+        CGRectMake(frame.origin.x - 5.0f, 50.0f, frame.size.width - 25.0f, 30.0f)];
+    textField.autocorrectionType = UITextAutocorrectionTypeNo;
+    textField.backgroundColor = [UIColor whiteColor];
+    textField.borderStyle = UITextBorderStyleLine;
+    textField.clearButtonMode = UITextFieldViewModeWhileEditing;
+    textField.delegate = self;
+    textField.placeholder = @"<Enter shortcut name>";
+    textField.text = [[Preferences configForShortcut:selectedShortcut] name];
+    [alertView addSubview:textField];
+
+    // Give keyboard focus to text field
+    [textField becomeFirstResponder];
+}
+
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(int)index
 {
-    // Reset the table by deselecting the current selection
     UITableView *tableView = [self tableView];
-    [tableView deselectRowAtIndexPath:[tableView indexPathForSelectedRow] animated:YES];
 
     if (index == 1) {
         UITableViewCell *cell = [tableView cellForRowAtIndexPath:
             [NSIndexPath indexPathForRow:selectedShortcut inSection:0]];
-        [cell setText:[[alertView textField] text]];
+        cell.textLabel.text = textField.text;
 
         ShortcutConfig *config = [Preferences configForShortcut:selectedShortcut];
-        [config setName:[[alertView textField] text]];
+        [config setName:textField.text];
     }
+    [textField release];
+    textField = nil;
+
+    // Reset the table by deselecting the current selection
+    [tableView deselectRowAtIndexPath:[tableView indexPathForSelectedRow] animated:YES];
 }
 
 // NOTE: The following method allows the use of the return key to select "OK"
-- (BOOL)textFieldShouldReturn:(UITextField *)textField
+- (BOOL)textFieldShouldReturn:(UITextField *)textField_
 {
-    UIAlertView *alert = (UIAlertView *)[textField superview];
+    UIAlertView *alert = (UIAlertView *)[textField_ superview];
 	[self alertView:alert clickedButtonAtIndex:1];
 	[alert dismissWithClickedButtonIndex:1 animated:NO];
 
