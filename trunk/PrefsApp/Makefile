@@ -5,7 +5,7 @@ CODESIGN = /opt/iPhone/ldid -S
 
 # These paths must be changed to match the compilation environment
 SYS_PATH = /opt/iPhone/sys
-PREFSAPP_PATH = /files/Platforms/iPhone/Projects/PrefsApp/lib
+PREFSAPP_PATH = ./PrefsApp
 
 CC = arm-apple-darwin9-gcc
 CFLAGS = -march=armv6 -mcpu=arm1176jzf-s -Wall -Os -ObjC -std=gnu99 -include common.h
@@ -20,14 +20,13 @@ LDFLAGS = -march=armv6 \
           -framework UIKit \
 		  -F$(SYS_PATH)/System/Library/PrivateFrameworks \
           -framework SpringBoardServices \
-		  -L$(PREFSAPP_PATH) -lPrefsApp \
           -lobjc
 
 INCLUDES = -F$(SYS_PATH)/System/Library/PrivateFrameworks \
-		   -I$(PREFSAPP_PATH)/Classes \
-		   -I./Classes
+		   -I./Classes \
+		   -I$(PREFSAPP_PATH)
 
-SUBDIRS    = . Classes
+SUBDIRS    = . Classes $(PREFSAPP_PATH)
 
 DIRLIST    := $(SUBDIRS:%=%)
 SRCS       := $(foreach dir,$(DIRLIST), $(wildcard $(dir)/*.m))
