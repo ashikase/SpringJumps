@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-09-07 09:56:28
+ * Last-modified: 2009-09-28 22:58:22
  */
 
 /**
@@ -41,12 +41,9 @@
  */
 
 
-#import "Common.h"
-
 #import <CoreFoundation/CFPreferences.h>
 
-#import <GraphicsServices/GraphicsServices.h>
-extern "C" GSEventRecord * _GSEventGetGSEventRecord(struct __GSEvent *);
+//extern "C" GSEventRecord * _GSEventGetGSEventRecord(struct __GSEvent *);
 
 #import <SpringBoard/SBApplication.h>
 #import <SpringBoard/SBApplicationIcon.h>
@@ -59,6 +56,8 @@ extern "C" GSEventRecord * _GSEventGetGSEventRecord(struct __GSEvent *);
 #import <SpringBoard/SpringBoard.h>
 
 #import "Dock.h"
+
+#define MAX_PAGES 9
 
 
 static BOOL showPageTitles = YES;

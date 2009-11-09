@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-19 14:15:46
+ * Last-modified: 2009-09-28 22:52:06
  */
 
 /**
@@ -43,8 +43,6 @@
 
 #import "Dock.h"
 
-#import "Common.h"
-
 #import <SpringBoard/SBApplicationIcon.h>
 #import <SpringBoard/SBIconModel.h>
 
@@ -55,6 +53,8 @@
 #define PADDING_LEFT 5.0f
 #define PADDING_TOP 12.0f
 #define PADDING_BOTTOM 4.0f
+
+#define MAX_PAGES 9
 
 
 @implementation SpringJumpsDock
