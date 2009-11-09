@@ -1,14 +1,13 @@
 /**
- * Name: SpringJumps
- * Type: iPhone OS 2.x SpringBoard extension (MobileSubstrate-based)
- * Description: Allows for the creation of icons that act as shortcuts
- *              to SpringBoard's different icon pages.
+ * Name: PrefsApp
+ * Type: iPhone OS application
+ * Description: a generic preferences application
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-10-02 00:20:25
+ * Last-modified: 2009-10-01 23:12:50
  */
 
 /**
- * Copyright (C) 2008  Lance Fetters (aka. ashikase)
+ * Copyright (C) 2009  Lance Fetters (aka. ashikase)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,24 +40,12 @@
  */
 
 
-#import "BasePreferences.h"
-
-@class ShortcutConfig;
+#import "BaseAppDelegate.h"
 
 
-@interface Preferences : BasePreferences
+@interface AppDelegate : BaseAppDelegate
 {
-    BOOL showPageTitles;
-    BOOL enableJumpDock;
-    NSMutableArray *shortcutConfigs;
 }
-
-@property(nonatomic) BOOL showPageTitles;
-@property(nonatomic, getter=jumpDockIsEnabled) BOOL enableJumpDock;
-@property(nonatomic, readonly) NSArray *shortcutConfigs;
-
-+ (Preferences *)sharedInstance;
-+ (ShortcutConfig *)configForShortcut:(int)index;
 
 @end
 

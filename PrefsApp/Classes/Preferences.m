@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-05-02 13:41:26
+ * Last-modified: 2009-10-04 00:18:26
  */
 
 /**
@@ -43,15 +43,13 @@
 
 #import "Preferences.h"
 
-#import <Foundation/Foundation.h>
-
-#import "Constants.h"
 #import "ShortcutConfig.h"
+
+#define MAX_PAGES 9
 
 
 @implementation Preferences
 
-@synthesize firstRun;
 @synthesize showPageTitles;
 @synthesize enableJumpDock;
 @synthesize shortcutConfigs;
@@ -71,78 +69,18 @@
     return [[[Preferences sharedInstance] shortcutConfigs] objectAtIndex:index];
 }
 
-- (id)init
-{
-    self = [super init];
-    if (self) {
-        shortcutConfigs = [[NSMutableArray alloc] initWithCapacity:MAX_PAGES];
-
-        // Setup default values
-        [self registerDefaults];
-
-        // Load preference values into memory
-        [self readFromDisk];
-
-        // Retain a copy of the initial values of the preferences
-        initialValues = [[self dictionaryRepresentation] retain];
-
-        // The on-disk values at startup are the same as initialValues
-        onDiskValues = [initialValues retain];
-    }
-    return self;
-}
-
 - (void)dealloc
 {
-    [onDiskValues release];
-    [initialValues release];
     [shortcutConfigs release];
     [super dealloc];
 }
 
 #pragma mark - Other
 
-- (NSDictionary *)dictionaryRepresentation
+- (NSDictionary *)defaults
 {
-    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:4];
+    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:[super defaults]];
 
-    [dict setObject:[NSNumber numberWithBool:firstRun] forKey:@"firstRun"];
-    [dict setObject:[NSNumber numberWithBool:showPageTitles] forKey:@"showPageTitles"];
-    [dict setObject:[NSNumber numberWithBool:enableJumpDock] forKey:@"enableJumpDock"];
-
-    NSMutableArray *array = [NSMutableArray arrayWithCapacity:MAX_PAGES];
-    for (int i = 0; i < MAX_PAGES; i++) {
-        ShortcutConfig *config = [shortcutConfigs objectAtIndex:i];
-        [array addObject:[config dictionaryRepresentation]];
-    }
-    [dict setObject:array forKey:@"shortcuts"];
-
-    return dict;
-}
-
-#pragma mark - Status
-
-- (BOOL)isModified
-{
-    return ![[self dictionaryRepresentation] isEqual:onDiskValues];
-}
-
-- (BOOL)needsRespring
-{
-    return ![[self dictionaryRepresentation] isEqual:initialValues];
-}
-
-#pragma mark - Read/Write methods
-
-- (void)registerDefaults
-{
-    // NOTE: This method sets default values for options that are not already
-    //       already set in the application's on-disk preferences list.
-
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithCapacity:2];
-
-    [dict setObject:[NSNumber numberWithBool:YES] forKey:@"firstRun"];
     [dict setObject:[NSNumber numberWithBool:YES] forKey:@"showPageTitles"];
     [dict setObject:[NSNumber numberWithBool:NO] forKey:@"enableJumpDock"];
 
@@ -155,36 +93,44 @@
     }
     [dict setObject:array forKey:@"shortcuts"];
 
-    [defaults registerDefaults:dict];
+    return dict;
 }
+
+- (NSDictionary *)dictionaryRepresentation
+{
+    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithDictionary:[super dictionaryRepresentation]];
+
+    [dict setObject:[NSNumber numberWithBool:showPageTitles] forKey:@"showPageTitles"];
+    [dict setObject:[NSNumber numberWithBool:enableJumpDock] forKey:@"enableJumpDock"];
+
+    NSMutableArray *array = [NSMutableArray arrayWithCapacity:MAX_PAGES];
+    for (ShortcutConfig *config in shortcutConfigs)
+        [array addObject:[config dictionaryRepresentation]];
+    [dict setObject:array forKey:@"shortcuts"];
+
+    return dict;
+}
+
+#pragma mark - Read/Write methods
 
 - (void)readFromDisk
 {
+    [super readFromDisk];
+
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 
-    firstRun = [defaults boolForKey:@"firstRun"];
     showPageTitles = [defaults boolForKey:@"showPageTitles"];
     enableJumpDock = [defaults boolForKey:@"enableJumpDock"];
 
+    if (shortcutConfigs == nil)
+        shortcutConfigs = [[NSMutableArray alloc] initWithCapacity:MAX_PAGES];
+
     NSArray *array = [defaults arrayForKey:@"shortcuts"];
-    for (int i = 0; i < MAX_PAGES; i++) {
-        NSDictionary *dict = [array objectAtIndex:i];
+    for (NSDictionary *dict in array) {
         ShortcutConfig *config = [[ShortcutConfig alloc] initWithDictionary:dict];
         [shortcutConfigs addObject:config];
+        [config release];
     }
-}
-
-- (void)writeToDisk
-{
-    NSDictionary *dict = [self dictionaryRepresentation];
-
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    [defaults setPersistentDomain:dict forName:[[NSBundle mainBundle] bundleIdentifier]];
-    [defaults synchronize];
-
-    // Update the list of on-disk values
-    [onDiskValues release];
-    onDiskValues = [dict retain];
 }
 
 @end
