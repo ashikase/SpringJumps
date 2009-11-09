@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-05-07 12:59:31
+ * Last-modified: 2009-11-08 22:11:22
  */
 
 /**
@@ -41,11 +41,9 @@
  */
 
 
-#import <UIKit/UIKit.h>
-
-
-@interface JumpIconsController : UITableViewController
+@interface JumpIconsController : UITableViewController <UITextFieldDelegate>
 {
+    UITextField *textField;
     unsigned int selectedShortcut;
 }
 
