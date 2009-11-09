@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-10-02 17:01:22
+ * Last-modified: 2009-11-08 19:37:38
  */
 
 /**
@@ -43,7 +43,6 @@
 
 #import "RootController.h"
 
-#import "GeneralPrefsController.h"
 #import "JumpIconsController.h"
 #import "Preferences.h"
 
@@ -73,21 +72,39 @@
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
+    static NSString *reuseIdToggle = @"ToggleCell";
     static NSString *reuseIdSimple = @"SimpleCell";
 
     UITableViewCell *cell = nil;
     if (indexPath.section == 0) {
-        static NSString *cellTitles[] = { @"General", @"Jump Icons" };
+        static NSString *cellTitles[] = { @"Page Titles", @"Jump Icons" };
 
-        // Try to retrieve from the table view a now-unused cell with the given identifier
-        cell = [tableView dequeueReusableCellWithIdentifier:reuseIdSimple];
-        if (cell == nil) {
-            // Cell does not exist, create a new one
-            cell = [[[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSimple] autorelease];
-            cell.selectionStyle = UITableViewCellSelectionStyleGray;
-            cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+        if (indexPath.row == 0) {
+            // Try to retrieve from the table view a now-unused cell with the given identifier
+            cell = [tableView dequeueReusableCellWithIdentifier:reuseIdToggle];
+            if (cell == nil) {
+                // Cell does not exist, create a new one
+                cell = [[[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSimple] autorelease];
+                cell.selectionStyle = UITableViewCellSelectionStyleNone;
+                cell.textLabel.text = cellTitles[indexPath.row];
+
+                UISwitch *toggle = [[UISwitch alloc] init];
+                toggle.on = [[Preferences sharedInstance] showPageTitles];
+                [toggle addTarget:self action:@selector(switchToggled:) forControlEvents:UIControlEventValueChanged];
+                [cell setAccessoryView:toggle];
+                [toggle release];
+            }
+        } else {
+            // Try to retrieve from the table view a now-unused cell with the given identifier
+            cell = [tableView dequeueReusableCellWithIdentifier:reuseIdSimple];
+            if (cell == nil) {
+                // Cell does not exist, create a new one
+                cell = [[[UITableViewCell alloc] initWithFrame:CGRectZero reuseIdentifier:reuseIdSimple] autorelease];
+                cell.selectionStyle = UITableViewCellSelectionStyleGray;
+                cell.textLabel.text = cellTitles[indexPath.row];
+                cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+            }
         }
-        cell.textLabel.text = cellTitles[indexPath.row];
     } else {
         cell = [super tableView:tableView cellForRowAtIndexPath:indexPath];
     }
@@ -99,13 +116,20 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    if (indexPath.section == 0) {
-        UIViewController *vc = [[(indexPath.row == 0) ? [GeneralPrefsController alloc] : [JumpIconsController alloc]
-            initWithStyle:1] autorelease];
+    if (indexPath.section == 0 && indexPath.row == 1) {
+        UIViewController *vc = [[[JumpIconsController alloc] initWithStyle:1] autorelease];
         [[self navigationController] pushViewController:vc animated:YES];
     } else {
         [super tableView:tableView didSelectRowAtIndexPath:indexPath];
     }
+}
+
+#pragma mark - Switch delegate
+
+- (void)switchToggled:(UISwitch *)control
+{
+    // Toggled show page titles
+    [[Preferences sharedInstance] setShowPageTitles:control.on];
 }
 
 @end
