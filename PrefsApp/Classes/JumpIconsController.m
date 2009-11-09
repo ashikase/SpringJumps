@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-11-08 23:07:52
+ * Last-modified: 2009-11-08 23:10:38
  */
 
 /**
@@ -145,25 +145,22 @@ extern NSString * SBSCopyIconImagePathForDisplayIdentifier(NSString *identifier)
 
         UISwitch *toggle = [[UISwitch alloc] init];
         [toggle addTarget:self action:@selector(switchToggled:) forControlEvents:4096]; // ValueChanged
-        [cell setAccessoryView:toggle];
+        cell.accessoryView = toggle;
         [toggle release];
     }
 
     ShortcutConfig *config = [Preferences configForShortcut:indexPath.row];
-    [cell setText:config.name];
+    cell.textLabel.text = config.name;
 
     NSString *identifier = [NSString stringWithFormat:@"%s.%d", "jp.ashikase.springjumps", indexPath.row];
     NSString *iconPath = SBSCopyIconImagePathForDisplayIdentifier(identifier);
     if (iconPath != nil) {
-        UIImage *icon = [UIImage imageWithContentsOfFile:iconPath];
-        //icon = [icon _imageScaledToSize:CGSizeMake(35, 36) interpolationQuality:0];
-        [cell setImage:icon];
+        cell.image = [UIImage imageWithContentsOfFile:iconPath];
         [iconPath release];
     }
 
     UISwitch *toggle = (UISwitch *)[cell accessoryView];
-    [toggle setOn:config.enabled];
-    [toggle setHidden:[[Preferences sharedInstance] jumpDockIsEnabled]];
+    toggle.on = config.enabled;
 
     return cell;
 }
