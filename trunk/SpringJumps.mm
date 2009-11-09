@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-09-07 00:53:49
+ * Last-modified: 2009-09-07 09:56:28
  */
 
 /**
@@ -236,7 +236,8 @@ HOOK(SBIconController, updateCurrentIconListIndex, void)
 
 HOOK(SBIcon, setHighlighted$delayUnhighlight$, void, BOOL highlighted, BOOL delay)
 {
-    return CALL_ORIG(SBIcon, setHighlighted$delayUnhighlight$, highlighted, ![[self displayIdentifier] hasPrefix:@APP_ID]);
+    BOOL flag = [[self displayIdentifier] hasPrefix:@APP_ID] ? NO : delay;
+    return CALL_ORIG(SBIcon, setHighlighted$delayUnhighlight$, highlighted, flag);
 }
 
 //______________________________________________________________________________
