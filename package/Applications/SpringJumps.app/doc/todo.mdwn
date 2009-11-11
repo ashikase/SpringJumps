@@ -8,5 +8,5 @@
 > # Rejected Requests
 > ## (These will not be implemented)
 > - - -
-> * Jump dock.
->     * The jump dock is officially dead and will not be readded. In the developer's opinion, it should be written as a separate extension. Others are welcome to write and release such an extension.
+> * Jump dock
+>     * The jump dock is officially dead and will not be readded. In the developer's opinion, it should be exist as a separate extension. Others are welcome to write and release such an extension.
