@@ -1,0 +1,39 @@
+> # Version svn.rXX
+> - - -
+> * Added support for upto 11 pages.
+> * Added support for Spotlight.
+> * Removed jump dock.
+
+- - -
+
+> # Version svn.r93
+> - - -
+> * Fixed immovable icon issue.
+> * Updated preferences application and documentation.
+
+- - -
+
+> # Version svn.r87
+> - - -
+> * Added jump dock.
+> * Fixed page title not showing after restart.
+
+- - -
+
+> # Version svn.r53
+> - - -
+> * No longer crashes upon launching settings application.
+> * Fixed support for firmware < 2.1
+
+- - -
+
+> # Version svn.r48
+> - - -
+> * Fixed disappearing-titles issue.
+> * Various optimizations.
+
+- - -
+
+> # Version svn.r37
+> - - -
+> * Initial release
