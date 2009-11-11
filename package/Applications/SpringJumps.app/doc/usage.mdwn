@@ -1,0 +1,5 @@
+> SpringJumps provides special icons that act as shortcuts to the different pages of SpringBoard.
+
+- - -
+
+> To quickly jump to a given SpringBoard page, simply tap on the related shortcut icon. SpringBoard numbers its pages starting from 0, so to jump to the first page, tap the icon labeled (by default) "Page 0".
