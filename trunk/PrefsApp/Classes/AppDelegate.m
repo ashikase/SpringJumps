@@ -3,7 +3,7 @@
  * Type: iPhone OS application
  * Description: a generic preferences application
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-10-02 17:17:05
+ * Last-modified: 2009-11-11 23:40:37
  */
 
 /**
@@ -52,7 +52,7 @@
 {
     prefs = [[Preferences sharedInstance] retain];
     rootController = [[RootController alloc] initWithStyle:UITableViewStyleGrouped];
-    devSite = @"http://iphone-prefsapp.googlecode.com/";
+    devSite = @"http://iphone-springjumps.googlecode.com/";
     [super applicationDidFinishLaunching:application];
 }
 
