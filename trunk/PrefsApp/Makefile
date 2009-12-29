@@ -22,13 +22,11 @@ LDFLAGS = -march=armv6 \
           -framework SpringBoardServices \
           -lobjc
 
-INCLUDES = -F$(SYS_PATH)/System/Library/PrivateFrameworks \
-		   -I./Classes \
-		   -I$(PREFSAPP_PATH)
+DIRLIST    = . Classes $(PREFSAPP_PATH)
 
-SUBDIRS    = . Classes $(PREFSAPP_PATH)
+INCLUDES = -F$(SYS_PATH)/System/Library/PrivateFrameworks
+INCLUDES += $(foreach dir,$(DIRLIST),-I$(dir))
 
-DIRLIST    := $(SUBDIRS:%=%)
 SRCS       := $(foreach dir,$(DIRLIST), $(wildcard $(dir)/*.m))
 HDRS       := $(foreach dir,$(DIRLIST), $(wildcard $(dir)/*.h))
 OBJS       := $(SRCS:.m=.o)
