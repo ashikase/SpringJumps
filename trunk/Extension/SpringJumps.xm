@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-09-28 22:58:22
+ * Last-modified: 2009-12-30 02:54:26
  */
 
 /**
@@ -57,6 +57,7 @@
 
 #import "Dock.h"
 
+#define APP_ID "jp.ashikase.springjumps"
 #define MAX_PAGES 9
 
 
@@ -114,10 +115,13 @@ static void loadPreferences()
 //______________________________________________________________________________
 //______________________________________________________________________________
 
-HOOK(SBIconModel, init, id)
+%hook SBIconModel
+
+- (id)init
 {
     loadPreferences();
-    self = CALL_ORIG(SBIconModel, init);
+
+    self = %orig;
     if (self) {
         for (int i = 0; i < MAX_PAGES; i++) {
             SBApplicationIcon *icon = [self iconForDisplayIdentifier:
@@ -140,48 +144,18 @@ HOOK(SBIconModel, init, id)
     return self;
 }
 
-HOOK(SBIconModel, dealloc, void)
+- (void)dealloc
 {
     for (int i = 0; i < MAX_PAGES; i++)
         [shortcutNames[i] release];
-    CALL_ORIG(SBIconModel, dealloc);
+
+    %orig;
 }
+
+%end
 
 //______________________________________________________________________________
 //______________________________________________________________________________
-
-HOOK(SBIconController, clickedIcon$, void, SBIcon *icon)
-{
-    // If the jump dock is enabled, destroy it
-    // NOTE: This code is safe to use even if jump dock is not enabled.
-    dismissJumpDock();
-
-    NSString *ident = [icon displayIdentifier];
-    if ([ident hasPrefix:@APP_ID]) {
-        // Use identifier with format: APP_ID.pagenumber
-        // (e.g. jp.ashikase.springjumps.2)
-        NSArray *parts = [ident componentsSeparatedByString:@"."];
-        if ([parts count] == 4) {
-            int pageNumber = [[parts objectAtIndex:3] intValue];
-
-            // Get the current page index
-            int _currentIconListIndex = MSHookIvar<int>(self, "_currentIconListIndex");
-
-            Class $SBIconModel(objc_getClass("SBIconModel"));
-            SBIconModel *iconModel = [$SBIconModel sharedInstance];
-            if ((pageNumber != _currentIconListIndex) &&
-                    (pageNumber < (int)[[iconModel iconLists] count])) {
-                // Switch to requested page
-                [self scrollToIconListAtIndex:pageNumber animate:NO];
-            }
-            return;
-        }
-        // Fall-through
-    }
-
-    // Regular application icon or SpringJumps settings app
-    CALL_ORIG(SBIconController, clickedIcon$, icon);
-}
 
 // NOTE: It would be more efficient to have this function called via
 //       SBTouchPageIndicator::setCurrentPage:(int); however, the page title
@@ -214,35 +188,88 @@ static void updatePageTitle()
     }
 }
 
-// NOTE: The following method is for firmware 2.0.x
-HOOK(SBIconController, updateCurrentIconListIndexUpdatingPageIndicator$, void, BOOL update)
+%hook SBIconController
+
+- (void)clickedIcon:(SBIcon *)icon
 {
-    CALL_ORIG(SBIconController, updateCurrentIconListIndexUpdatingPageIndicator$, update);
+    // If the jump dock is enabled, destroy it
+    // NOTE: This code is safe to use even if jump dock is not enabled.
+    dismissJumpDock();
+
+    NSString *ident = [icon displayIdentifier];
+    if ([ident hasPrefix:@APP_ID]) {
+        // Use identifier with format: APP_ID.pagenumber
+        // (e.g. jp.ashikase.springjumps.2)
+        NSArray *parts = [ident componentsSeparatedByString:@"."];
+        if ([parts count] == 4) {
+            int pageNumber = [[parts objectAtIndex:3] intValue];
+
+            // Get the current page index
+            int _currentIconListIndex = MSHookIvar<int>(self, "_currentIconListIndex");
+
+            Class $SBIconModel(objc_getClass("SBIconModel"));
+            SBIconModel *iconModel = [$SBIconModel sharedInstance];
+            if ((pageNumber != _currentIconListIndex) &&
+                    (pageNumber < (int)[[iconModel iconLists] count])) {
+                // Switch to requested page
+                [self scrollToIconListAtIndex:pageNumber animate:NO];
+            }
+            return;
+        }
+        // Fall-through
+    }
+
+    // Regular application icon or SpringJumps settings app
+    %orig;
+}
+
+%group PageIndicator20x
+
+// NOTE: The following method is for firmware 2.0.x
+- (void)updateCurrentIconListIndexUpdatingPageIndicator:(BOOL)update
+{
+    %orig;
+
     if (showPageTitles)
         updatePageTitle();
 }
+
+%end
+
+%group PageIndicator21
 
 // NOTE: The following method is for firmware 2.1+
-HOOK(SBIconController, updateCurrentIconListIndex, void)
+- (void)updateCurrentIconListIndex
 {
-    CALL_ORIG(SBIconController, updateCurrentIconListIndex);
+    %orig;
+
     if (showPageTitles)
         updatePageTitle();
 }
 
+%end
+
+%end
+
 //______________________________________________________________________________
 //______________________________________________________________________________
 
-HOOK(SBIcon, setHighlighted$delayUnhighlight$, void, BOOL highlighted, BOOL delay)
+%hook SBIcon
+
+- (void)setHighlighted:(BOOL)highlighted delayUnhighlight:(BOOL)delay
 {
     BOOL flag = [[self displayIdentifier] hasPrefix:@APP_ID] ? NO : delay;
-    return CALL_ORIG(SBIcon, setHighlighted$delayUnhighlight$, highlighted, flag);
+    return %orig(highlighted, flag);
 }
 
+%end
+
 //______________________________________________________________________________
 //______________________________________________________________________________
 
-HOOK(SBApplicationIcon, displayName, NSString *)
+%hook SBApplicationIcon
+
+- (NSString *)displayName
 {
     NSString *ident = [self displayIdentifier];
     if ([ident hasPrefix:@APP_ID]) {
@@ -256,12 +283,44 @@ HOOK(SBApplicationIcon, displayName, NSString *)
         }
     }
 
-    return CALL_ORIG(SBApplicationIcon, displayName);
+    return %orig;
 }
 
-HOOK(SBApplicationIcon, mouseDown$, void, struct __GSEvent *event)
+%end
+
+//______________________________________________________________________________
+//______________________________________________________________________________
+
+%group JumpDock
+
+%hook SpringBoard
+
+- (void)lockButtonUp:(GSEventRef)event
 {
-    CALL_ORIG(SBApplicationIcon, mouseDown$, event);
+    %orig;
+
+    // If the jump dock is enabled, destroy it
+    // NOTE: This code is safe to use even if jump dock is not enabled.
+    dismissJumpDock();
+}
+
+- (void)menuButtonUp:(GSEventRef)event
+{
+    %orig;
+
+    // If the jump dock is enabled, destroy it
+    // NOTE: This code is safe to use even if jump dock is not enabled.
+    dismissJumpDock();
+}
+
+%end
+
+%hook SBApplicationIcon
+
+- (void)mouseDown:(GSEventRef)event
+{
+    %orig;
+
     NSString *ident = [self displayIdentifier];
     if ([ident hasPrefix:@APP_ID]) {
         NSArray *parts = [ident componentsSeparatedByString:@"."];
@@ -272,11 +331,12 @@ HOOK(SBApplicationIcon, mouseDown$, void, struct __GSEvent *event)
     }
 }
 
-//______________________________________________________________________________
-//______________________________________________________________________________
+%end
 
 #if 0
-HOOK(SBTouchPageIndicator, mouseDown$, void, struct __GSEvent *event)
+%hook SBTouchPageIndicator
+
+- (void)mouseDown:(GSEventRef)event
 {
     GSEventRecord *record = _GSEventGetGSEventRecord(event);
     if (record) {
@@ -302,10 +362,10 @@ HOOK(SBTouchPageIndicator, mouseDown$, void, struct __GSEvent *event)
         }
     }
 
-    CALL_ORIG(SBTouchPageIndicator, mouseDown$, event);
+    %orig;
 }
 
-HOOK(SBTouchPageIndicator, mouseUp$, void, struct __GSEvent *event)
+- (void)mouseUp:(GSEventRef)event
 {
     if (jumpDock) {
         // FIXME: Is there a simpler way to do this? (Slide to tap)
@@ -321,36 +381,19 @@ HOOK(SBTouchPageIndicator, mouseUp$, void, struct __GSEvent *event)
             }
         }
     } else {
-        CALL_ORIG(SBTouchPageIndicator, mouseUp$, event);
+        orig;
     }
 }
+
+%end
 #endif
 
-//______________________________________________________________________________
-//______________________________________________________________________________
-
-HOOK(SpringBoard, lockButtonUp$, void, struct __GSEvent *event)
-{
-    CALL_ORIG(SpringBoard, lockButtonUp$, event);
-
-    // If the jump dock is enabled, destroy it
-    // NOTE: This code is safe to use even if jump dock is not enabled.
-    dismissJumpDock();
-}
-
-HOOK(SpringBoard, menuButtonUp$, void, struct __GSEvent *event)
-{
-    CALL_ORIG(SpringBoard, menuButtonUp$, event);
-
-    // If the jump dock is enabled, destroy it
-    // NOTE: This code is safe to use even if jump dock is not enabled.
-    dismissJumpDock();
-}
+%end
 
 //______________________________________________________________________________
 //______________________________________________________________________________
 
-extern "C" void SpringJumpsInitialize()
+__attribute__((constructor)) static void init()
 {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
@@ -360,25 +403,10 @@ extern "C" void SpringJumpsInitialize()
         return;
 
     // Setup hooks
-    Class $SBIconModel(objc_getClass("SBIconModel"));
-    LOAD_HOOK($SBIconModel, @selector(init), SBIconModel$init);
-    LOAD_HOOK($SBIconModel, @selector(dealloc), SBIconModel$dealloc);
-
-    Class $SBIconController(objc_getClass("SBIconController"));
-    LOAD_HOOK($SBIconController, @selector(clickedIcon:), SBIconController$clickedIcon$);
-
     if (class_getInstanceMethod($SBIconController, @selector(updateCurrentIconListIndex)))
-        LOAD_HOOK($SBIconController, @selector(updateCurrentIconListIndex),
-                SBIconController$updateCurrentIconListIndex);
+        %init(PageIndicator20x)
     else
-        LOAD_HOOK($SBIconController, @selector(updateCurrentIconListIndexUpdatingPageIndicator:),
-            SBIconController$updateCurrentIconListIndexUpdatingPageIndicator$);
-
-    Class $SBIcon(objc_getClass("SBApplicationIcon"));
-    LOAD_HOOK($SBIcon, @selector(setHighlighted:delayUnhighlight:), SBIcon$setHighlighted$delayUnhighlight$);
-
-    Class $SBApplicationIcon(objc_getClass("SBApplicationIcon"));
-    LOAD_HOOK($SBApplicationIcon, @selector(displayName), SBApplicationIcon$displayName);
+        %init(PageIndicator21)
 
     // FIXME: Need to rethink where and when preferences are loaded
     Boolean valid;
@@ -386,19 +414,10 @@ extern "C" void SpringJumpsInitialize()
     if (valid)
         jumpDockIsEnabled = flag;
 
-    if (jumpDockIsEnabled) {
-        LOAD_HOOK($SBApplicationIcon, @selector(mouseDown:), SBApplicationIcon$mouseDown$);
+    if (jumpDockIsEnabled)
+        %init(JumpDock);
 
-#if 0
-        Class $SBTouchPageIndicator = objc_getClass("SBTouchPageIndicator");
-        LOAD_HOOK($SBTouchPageIndicator, @selector(mouseDown:), SBTouchPageIndicator$mouseDown$);
-        LOAD_HOOK($SBTouchPageIndicator, @selector(mouseUp:), SBTouchPageIndicator$mouseUp$);
-#endif
-
-        Class $SpringBoard(objc_getClass("SpringBoard"));
-        LOAD_HOOK($SpringBoard, @selector(lockButtonUp:), SpringBoard$lockButtonUp$);
-        LOAD_HOOK($SpringBoard, @selector(menuButtonUp:), SpringBoard$menuButtonUp$);
-    }
+    %init;
 
     [pool release];
 }
