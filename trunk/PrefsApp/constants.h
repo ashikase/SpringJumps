@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-01-22 13:39:12
+ * Last-modified: 2009-11-20 01:06:55
  */
 
 /**
@@ -53,6 +53,6 @@
 #define DOC_URL DEVSITE_URL"svn/trunk/NonMirrored/doc"
 
 // SpringJumps-specific
-#define MAX_PAGES 9
+#define MAX_PAGES 11
 
 /* vim: set syntax=objcpp sw=4 ts=4 sts=4 expandtab textwidth=80 ff=unix: */
