@@ -4,7 +4,7 @@
  * Description: Allows for the creation of icons that act as shortcuts
  *              to SpringBoard's different icon pages.
  * Author: Lance Fetters (aka. ashikase)
- * Last-modified: 2009-10-04 00:18:26
+ * Last-modified: 2009-11-12 01:08:58
  */
 
 /**
@@ -43,9 +43,8 @@
 
 #import "Preferences.h"
 
+#import "constants.h"
 #import "ShortcutConfig.h"
-
-#define MAX_PAGES 9
 
 
 @implementation Preferences
@@ -131,6 +130,9 @@
         [shortcutConfigs addObject:config];
         [config release];
     }
+
+    // FIXME: If number of shortcuts is less than MAX_PAGES, fill remaining
+    // spots with defaults
 }
 
 @end
